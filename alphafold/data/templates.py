@@ -209,9 +209,9 @@ def _assess_hhsearch_hit(
 
   # Check whether the template is a large subsequence or duplicate of original
   # query. This can happen due to duplicate entries in the PDB database.
-  duplicate = (template_sequence in query_sequence and
-               length_ratio > max_subsequence_ratio)
-
+  #duplicate = (template_sequence in query_sequence and
+  #             length_ratio > max_subsequence_ratio)
+  duplicate = False
   if _is_after_cutoff(hit_pdb_code, release_dates, release_date_cutoff):
     raise DateError(f'Date ({release_dates[hit_pdb_code]}) > max template date '
                     f'({release_date_cutoff}).')
@@ -937,7 +937,7 @@ class HmmsearchHitFeaturizer(TemplateHitFeaturizer):
       query_sequence: str,
       hits: Sequence[parsers.TemplateHit]) -> TemplateSearchResult:
     """Computes the templates for given query sequence (more details above)."""
-    logging.info('Searching for template for: %s', query_sequence)
+    logging.info('Searching for multimer template for: %s', query_sequence)
 
     template_features = {}
     for template_feature_name in TEMPLATE_FEATURES:
@@ -976,17 +976,19 @@ class HmmsearchHitFeaturizer(TemplateHitFeaturizer):
         warnings.append(result.warning)
 
       if result.features is None:
-        logging.debug('Skipped invalid hit %s, error: %s, warning: %s',
+        logging.info('Skipped invalid hit %s, error: %s, warning: %s',
                       hit.name, result.error, result.warning)
       else:
         already_seen_key = result.features['template_sequence']
+        #print(f"This template sequence is: {result.features['template_sequence']}")
         if already_seen_key in already_seen:
-          continue
+          #continue
+          pass
         # Increment the hit counter, since we got features out of this hit.
         already_seen.add(already_seen_key)
         for k in template_features:
           template_features[k].append(result.features[k])
-
+          # THESE ARE FEATURES FOR SINGLE INPUT CHAINS; NOT MERGED YET
     if already_seen:
       for name in template_features:
         template_features[name] = np.stack(

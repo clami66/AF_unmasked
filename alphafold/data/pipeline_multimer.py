@@ -175,7 +175,8 @@ class DataPipeline:
                jackhmmer_binary_path: str,
                uniprot_database_path: str,
                max_uniprot_hits: int = 50000,
-               use_precomputed_msas: bool = False):
+               use_precomputed_msas: bool = False,
+               separate_homomer_msas: bool = False):
     """Initializes the data pipeline.
 
     Args:
@@ -193,6 +194,7 @@ class DataPipeline:
         database_path=uniprot_database_path)
     self._max_uniprot_hits = max_uniprot_hits
     self.use_precomputed_msas = use_precomputed_msas
+    self.separate_homomer_msas = separate_homomer_msas
 
   def _process_single_chain(
       self,
@@ -255,9 +257,10 @@ class DataPipeline:
 
     all_chain_features = {}
     sequence_features = {}
-    is_homomer_or_monomer = len(set(input_seqs)) == 1
+    # even if it's a homomer, consider it a heteromer when separating MSAs
+    is_homomer_or_monomer = len(set(input_seqs)) == 1 and not self.separate_homomer_msas
     for chain_id, fasta_chain in chain_id_map.items():
-      if fasta_chain.sequence in sequence_features:
+      if fasta_chain.sequence in sequence_features and not self.separate_homomer_msas:
         all_chain_features[chain_id] = copy.deepcopy(
             sequence_features[fasta_chain.sequence])
         continue

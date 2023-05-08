@@ -57,6 +57,37 @@ MODEL_PRESETS = {
         'model_3_multimer_v3',
         'model_4_multimer_v3',
         'model_5_multimer_v3',
+        'model_1_multimer_v2',
+        'model_2_multimer_v2',
+        'model_3_multimer_v2',
+        'model_4_multimer_v2',
+        'model_5_multimer_v2',
+        'model_1_multimer',
+        'model_2_multimer',
+        'model_3_multimer',
+        'model_4_multimer',
+        'model_5_multimer'
+    ),
+    'multimer_v1': (
+        'model_1_multimer',
+        'model_2_multimer',
+        'model_3_multimer',
+        'model_4_multimer',
+        'model_5_multimer',
+    ),
+   'multimer_v2': (
+        'model_1_multimer_v2',
+        'model_2_multimer_v2',
+        'model_3_multimer_v2',
+        'model_4_multimer_v2',
+        'model_5_multimer_v2',
+    ),
+   'multimer_v3': (
+        'model_1_multimer_v3',
+        'model_2_multimer_v3',
+        'model_3_multimer_v3',
+        'model_4_multimer_v3',
+        'model_5_multimer_v3',
     ),
 }
 MODEL_PRESETS['monomer_casp14'] = MODEL_PRESETS['monomer']
@@ -464,6 +495,8 @@ CONFIG = ml_collections.ConfigDict({
 CONFIG_MULTIMER = ml_collections.ConfigDict({
     'model': {
         'embeddings_and_evoformer': {
+            'cross_chain_templates': False,
+            'cross_chain_templates_only': False,
             'evoformer_num_block': 48,
             'evoformer': {
                 'msa_column_attention': {

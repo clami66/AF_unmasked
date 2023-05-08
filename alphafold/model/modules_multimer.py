@@ -22,6 +22,7 @@ Lower-level modules up to EvoformerIteration are reused from modules.py.
 
 import functools
 from typing import Sequence
+from absl import logging
 
 from alphafold.common import residue_constants
 from alphafold.model import all_atom_multimer
@@ -692,6 +693,11 @@ class EmbeddingsAndEvoformer(hk.Module):
         # Construct a mask such that only intra-chain template features are
         # computed, since all templates are for each chain individually.
         multichain_mask = batch['asym_id'][:, None] == batch['asym_id'][None, :]
+        if c.cross_chain_templates:
+          multichain_mask = multichain_mask | (batch['asym_id'][:, None] != batch['asym_id'][None, :])
+        elif c.cross_chain_templates_only:
+          multichain_mask = batch['asym_id'][:, None] != batch['asym_id'][None, :]
+
         safe_key, safe_subkey = safe_key.split()
         template_act = template_module(
             query_embedding=pair_activations,

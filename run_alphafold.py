@@ -103,7 +103,7 @@ flags.DEFINE_enum('db_preset', 'full_dbs',
                   'smaller genetic database config (reduced_dbs) or '
                   'full genetic database config  (full_dbs)')
 flags.DEFINE_enum('model_preset', 'monomer',
-                  ['monomer', 'monomer_casp14', 'monomer_ptm', 'multimer'],
+                  ['monomer', 'monomer_casp14', 'monomer_ptm', 'multimer', 'multimer_v1', 'multimer_v2', 'multimer_v3'],
                   'Choose preset model configuration - the monomer model, '
                   'the monomer model with extra ensembling, monomer model with '
                   'pTM head, or multimer model')
@@ -121,13 +121,22 @@ flags.DEFINE_integer('num_multimer_predictions_per_model', 5, 'How many '
                      'generated per model. E.g. if this is 2 and there are 5 '
                      'models then there will be 10 predictions per input. '
                      'Note: this FLAG only applies if model_preset=multimer')
-flags.DEFINE_boolean('use_precomputed_msas', False, 'Whether to read MSAs that '
+flags.DEFINE_integer('nstruct_start', 1, 'model to start with, can be used to parallelize jobs, '
+                     'e.g --nstruct 20 --nstruct_start 20 will only make model _20'
+                     'e.g --nstruct 21 --nstruct_start 20 will make model _20 and _21 etc.')
+flags.DEFINE_boolean('use_precomputed_msas', True, 'Whether to read MSAs that '
                      'have been written to disk instead of running the MSA '
                      'tools. The MSA files are looked up in the output '
                      'directory, so it must stay the same between multiple '
                      'runs that are to reuse the MSAs. WARNING: This will not '
                      'check if the sequence, database or configuration have '
                      'changed.')
+flags.DEFINE_integer('max_recycles', 3,'Max recycles')
+flags.DEFINE_integer('uniprot_max_hits', 50000, 'Max hits in uniprot MSA')
+flags.DEFINE_integer('mgnify_max_hits', 500, 'Max hits in uniprot MSA')
+flags.DEFINE_integer('uniref_max_hits', 10000, 'Max hits in uniprot MSA')
+flags.DEFINE_integer('bfd_max_hits', 10000, 'Max hits in uniprot MSA')
+flags.DEFINE_float('early_stop_tolerance', 0.5,'early stopping threshold')
 flags.DEFINE_enum_class('models_to_relax', ModelsToRelax.BEST, ModelsToRelax,
                         'The models to run the final relaxation step on. '
                         'If `all`, all models are relaxed, which may be time '
@@ -141,6 +150,11 @@ flags.DEFINE_boolean('use_gpu_relax', None, 'Whether to relax on GPU. '
                      'Relax on GPU can be much faster than CPU, so it is '
                      'recommended to enable if possible. GPUs must be available'
                      ' if this setting is enabled.')
+flags.DEFINE_boolean('dropout', False, 'Turn on drop out during inference to get more diversity')
+flags.DEFINE_boolean('cross_chain_templates', False, 'Whether to include cross-chain distances in multimer templates')
+flags.DEFINE_boolean('cross_chain_templates_only', False, 'Whether to include cross-chain distances in multimer templates')
+flags.DEFINE_boolean('separate_homomer_msas', False, 'Whether to force separate processing of homomer MSAs')
+flags.DEFINE_list('models_to_use',None, 'specify which models in model_preset that should be run')
 
 FLAGS = flags.FLAGS
 
@@ -394,7 +408,10 @@ def main(argv):
       template_searcher=template_searcher,
       template_featurizer=template_featurizer,
       use_small_bfd=use_small_bfd,
-      use_precomputed_msas=FLAGS.use_precomputed_msas)
+      use_precomputed_msas=FLAGS.use_precomputed_msas,
+      mgnify_max_hits=FLAGS.mgnify_max_hits,
+      uniref_max_hits=FLAGS.uniref_max_hits,
+      bfd_max_hits=FLAGS.bfd_max_hits)
 
   if run_multimer_system:
     num_predictions_per_model = FLAGS.num_multimer_predictions_per_model
@@ -402,23 +419,42 @@ def main(argv):
         monomer_data_pipeline=monomer_data_pipeline,
         jackhmmer_binary_path=FLAGS.jackhmmer_binary_path,
         uniprot_database_path=FLAGS.uniprot_database_path,
-        use_precomputed_msas=FLAGS.use_precomputed_msas)
+        use_precomputed_msas=FLAGS.use_precomputed_msas,
+        max_uniprot_hits=FLAGS.uniprot_max_hits,
+        separate_homomer_msas=FLAGS.separate_homomer_msas)
   else:
     num_predictions_per_model = 1
     data_pipeline = monomer_data_pipeline
 
   model_runners = {}
   model_names = config.MODEL_PRESETS[FLAGS.model_preset]
+  if FLAGS.models_to_use:
+    model_names =[m for m in model_names if m in FLAGS.models_to_use]
+  if len(model_names)==0:
+    raise ValueError(f'No models to run: {FLAGS.models_to_use} is not in {config.MODEL_PRESETS[FLAGS.model_preset]}')
   for model_name in model_names:
     model_config = config.model_config(model_name)
     if run_multimer_system:
       model_config.model.num_ensemble_eval = num_ensemble
+      if FLAGS.cross_chain_templates:
+        logging.info("Turning cross-chain templates ON (use at your own risk)")
+        model_config.model.embeddings_and_evoformer.cross_chain_templates = True
+      if FLAGS.cross_chain_templates_only:
+        logging.info("Turning cross-chain templates ON, in-chain templates OFF (use at your own risk)")
+        model_config.model.embeddings_and_evoformer.cross_chain_templates = False
+        model_config.model.embeddings_and_evoformer.cross_chain_templates_only = True
     else:
       model_config.data.eval.num_ensemble = num_ensemble
+    model_config.model.num_recycle = FLAGS.max_recycles
+    model_config.model.global_config.eval_dropout = FLAGS.dropout
+    model_config.model.recycle_early_stop_tolerance=FLAGS.early_stop_tolerance
+    logging.info(f'Setting max_recycles to {model_config.model.num_recycle}')
+    logging.info(f'Setting early stop tolerance to {model_config.model.recycle_early_stop_tolerance}')
+    logging.info(f'Setting dropout to {model_config.model.global_config.eval_dropout}')
     model_params = data.get_model_haiku_params(
         model_name=model_name, data_dir=FLAGS.data_dir)
     model_runner = model.RunModel(model_config, model_params)
-    for i in range(num_predictions_per_model):
+    for i in range(FLAGS.nstruct_start, num_predictions_per_model+1):
       model_runners[f'{model_name}_pred_{i}'] = model_runner
 
   logging.info('Have %d models: %s', len(model_runners),
