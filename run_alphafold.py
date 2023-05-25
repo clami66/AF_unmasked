@@ -121,6 +121,12 @@ flags.DEFINE_integer('num_multimer_predictions_per_model', 5, 'How many '
                      'generated per model. E.g. if this is 2 and there are 5 '
                      'models then there will be 10 predictions per input. '
                      'Note: this FLAG only applies if model_preset=multimer')
+flags.DEFINE_integer('num_monomer_predictions_per_model', 1, 'How many '
+                     'predictions (each with a different random seed) will be '
+                     'generated per monomer model. E.g. if this is 2 and there are 5 '
+                     'models then there will be 10 predictions per input. '
+                     'Note: this FLAG only applies if model_preset=monomer')
+flags.DEFINE_integer('nstruct',1,'How many predictions to generate')
 flags.DEFINE_integer('nstruct_start', 1, 'model to start with, can be used to parallelize jobs, '
                      'e.g --nstruct 20 --nstruct_start 20 will only make model _20'
                      'e.g --nstruct 21 --nstruct_start 20 will make model _20 and _21 etc.')
@@ -131,6 +137,8 @@ flags.DEFINE_boolean('use_precomputed_msas', True, 'Whether to read MSAs that '
                      'runs that are to reuse the MSAs. WARNING: This will not '
                      'check if the sequence, database or configuration have '
                      'changed.')
+flags.DEFINE_boolean('seq_only', False,'Exit after sequence searches')
+flags.DEFINE_boolean('no_templates', False,'Will skip templates faster than using the date')
 flags.DEFINE_integer('max_recycles', 3,'Max recycles')
 flags.DEFINE_integer('uniprot_max_hits', 50000, 'Max hits in uniprot MSA')
 flags.DEFINE_integer('mgnify_max_hits', 500, 'Max hits in uniprot MSA')
@@ -211,23 +219,29 @@ def predict_structure(
       input_fasta_path=fasta_path,
       msa_output_dir=msa_output_dir)
   timings['features'] = time.time() - t_0
-
+  #BW
+  if FLAGS.seq_only:
+    logging.info('Exiting since --seq_only is True... ')
+    sys.exit()
   # Write out features as a pickled dictionary.
   features_output_path = os.path.join(output_dir, 'features.pkl')
   with open(features_output_path, 'wb') as f:
     pickle.dump(feature_dict, f, protocol=4)
-
   unrelaxed_pdbs = {}
   unrelaxed_proteins = {}
   relaxed_pdbs = {}
   relax_metrics = {}
   ranking_confidences = {}
-
+ 
   # Run the models.
   num_models = len(model_runners)
   for model_index, (model_name, model_runner) in enumerate(
       model_runners.items()):
     logging.info('Running model %s on %s', model_name, fasta_name)
+    unrelaxed_pdb_path = os.path.join(output_dir, f'unrelaxed_{model_name}.pdb')
+    if os.path.exists(unrelaxed_pdb_path):
+      logging.info(f'Model exists: {unrelaxed_pdb_path}')
+      continue
     t_0 = time.time()
     model_random_seed = model_index + random_seed * num_models
     processed_feature_dict = model_runner.process_features(
@@ -262,6 +276,10 @@ def predict_structure(
     # Save the model outputs.
     result_output_path = os.path.join(output_dir, f'result_{model_name}.pkl')
     with open(result_output_path, 'wb') as f:
+      keys_to_remove=['distogram', 'experimentally_resolved', 'masked_msa','aligned_confidence_probs']
+      for k in keys_to_remove:
+        if k in np_prediction_result:
+          del(np_prediction_result[k])
       pickle.dump(np_prediction_result, f, protocol=4)
 
     # Add the predicted LDDT in the b-factor column.
@@ -276,7 +294,7 @@ def predict_structure(
 
     unrelaxed_proteins[model_name] = unrelaxed_protein
     unrelaxed_pdbs[model_name] = protein.to_pdb(unrelaxed_protein)
-    unrelaxed_pdb_path = os.path.join(output_dir, f'unrelaxed_{model_name}.pdb')
+#    unrelaxed_pdb_path = os.path.join(output_dir, f'unrelaxed_{model_name}.pdb')
     with open(unrelaxed_pdb_path, 'w') as f:
       f.write(unrelaxed_pdbs[model_name])
 
@@ -411,10 +429,11 @@ def main(argv):
       use_precomputed_msas=FLAGS.use_precomputed_msas,
       mgnify_max_hits=FLAGS.mgnify_max_hits,
       uniref_max_hits=FLAGS.uniref_max_hits,
-      bfd_max_hits=FLAGS.bfd_max_hits)
+      bfd_max_hits=FLAGS.bfd_max_hits,
+      no_templates=FLAGS.no_templates)
 
   if run_multimer_system:
-    num_predictions_per_model = FLAGS.num_multimer_predictions_per_model
+    num_predictions_per_model = max(FLAGS.nstruct,FLAGS.num_multimer_predictions_per_model)
     data_pipeline = pipeline_multimer.DataPipeline(
         monomer_data_pipeline=monomer_data_pipeline,
         jackhmmer_binary_path=FLAGS.jackhmmer_binary_path,
@@ -423,7 +442,7 @@ def main(argv):
         max_uniprot_hits=FLAGS.uniprot_max_hits,
         separate_homomer_msas=FLAGS.separate_homomer_msas)
   else:
-    num_predictions_per_model = 1
+    num_predictions_per_model = max(FLAGS.nstruct,FLAGS.num_monomer_predictions_per_model)
     data_pipeline = monomer_data_pipeline
 
   model_runners = {}
