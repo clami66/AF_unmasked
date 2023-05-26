@@ -7,6 +7,7 @@
 
 
 AF_PATH='/proj/wallner/apps/AF_multitemplate'
+PATH=$PATH:/proj/wallner/apps/hhsuite/bin/:/proj/wallner/apps/hmmer-3.2.1/bin/:/proj/wallner/apps/kalign/src/
 module load Python/3.7.0-anaconda-5.3.0-extras-nsc1
 #module load buildenv-gcccuda/.11.1-9.3.0-bare
 module load buildenv-gcccuda/11.4-9.3.0-bare
