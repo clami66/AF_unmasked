@@ -1,0 +1,17 @@
+--use_precomputed_msas
+--data_dir=/proj/wallner/apps/alphafold/alphafold_data/
+--template_mmcif_dir=/proj/wallner/apps/alphafold/alphafold_data/pdb_mmcif/mmcif_files
+--obsolete_pdbs_path=/proj/wallner/apps/alphafold/alphafold_data/pdb_mmcif/obsolete.dat
+#x5 more --mgnify_database_path=/proj/beyondfold/users/x_bjowa/databases/mgnify/mgy_all.fa
+--mgnify_database_path=/proj/wallner/apps/alphafold/alphafold_data/mgnify/mgy_clusters_2022_05.fa
+--uniref90_database_path=/proj/wallner/apps/alphafold/alphafold_data/uniref90/2023025/uniref90.fasta
+--max_template_date=3000-01-01
+--use_gpu_relax=True
+--model_preset=monomer_all
+--db_preset=full_dbs
+--pdb70_database_path=/proj/wallner/apps/alphafold/alphafold_data/pdb70/pdb70
+#--uniref30_database_path=/proj/beyondfold/apps/alphafold_data/uniclust30/UniRef30_2021_03/UniRef30_2021_03
+--uniref30_database_path=/proj/wallner/apps/alphafold/alphafold_data/uniref30/UniRef30_2023_02/UniRef30_2023_02
+--bfd_database_path=/proj/wallner/apps/alphafold/alphafold_data/bfd/bfd_metaclust_clu_complete_id30_c90_final_seq.sorted_opt
+#MULTIMER--pdb_seqres_database_path=/proj/beyondfold/apps/alphafold_data/pdb_seqres/pdb_seqres.txt
+#MULTIMER--uniprot_database_path=/proj/beyondfold/apps/alphafold_data/uniprot/uniprot.fasta
