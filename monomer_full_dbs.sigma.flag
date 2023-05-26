@@ -4,7 +4,7 @@
 --obsolete_pdbs_path=/proj/wallner/apps/alphafold/alphafold_data/pdb_mmcif/obsolete.dat
 #x5 more --mgnify_database_path=/proj/beyondfold/users/x_bjowa/databases/mgnify/mgy_all.fa
 --mgnify_database_path=/proj/wallner/apps/alphafold/alphafold_data/mgnify/mgy_clusters_2022_05.fa
---uniref90_database_path=/proj/wallner/apps/alphafold/alphafold_data/uniref90/2023025/uniref90.fasta
+--uniref90_database_path=/proj/wallner/apps/alphafold/alphafold_data/uniref90/20230525/uniref90.fasta
 --max_template_date=3000-01-01
 --use_gpu_relax=True
 --model_preset=monomer_all
