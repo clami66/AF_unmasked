@@ -23,7 +23,8 @@ def parse_args():
     )
     parser.add_argument("--target", metavar="targets", type=str, nargs="+", help="path to target(s) files. Multiple target files can be passed, e.g. one per chain in the template. Make sure you specify which chains should be aligned with --target_chains.", required=True)
     parser.add_argument("--template", metavar="template", type=str, help="path to template file. Only one template file should be passed", required=True)
-    parser.add_argument("--out_dir", type=str, help="path to output folder, which will include the template's structure, stockholm alignments and flagfile for usage on AlphaFold", default="./")
+    parser.add_argument("--out_dir", type=str, help="path to output folder, which will include the template's structure, stockholm alignments and flagfile for usage on AlphaFold", default="./AF_models")
+    parser.add_argument("--align", action="store_true", help="whether the template alignment file (pdb_hits.sto) should be generated")
     parser.add_argument("--align_tool", type=str, help="alignment tool", choices=["blast", "lddt_align", "tmalign"])
     parser.add_argument("--revision_date", type=str, help="revision date to set on output mmcif", default="2100-01-01")
     parser.add_argument(
@@ -31,12 +32,6 @@ def parse_args():
         default=False,
         action="store_true",
         help="The target(s) are in mmCIF format",
-    )
-    parser.add_argument(
-        "--fasta_target",
-        default=False,
-        action="store_true",
-        help="The target is not a structure but a fasta file, sequence alignments will be performed",
     )
     parser.add_argument(
         "--mmcif_template",
@@ -72,6 +67,11 @@ def parse_args():
     )
 
     return parser.parse_args()
+
+
+def is_fasta(path):
+    records = list(SeqIO.parse(path, "fasta"))
+    return True if records else False
 
 
 def load_PDB(path, n_model=0, is_mmcif=False):
@@ -204,8 +204,12 @@ def do_align(ref_seq, ref_model, query_seq, query_model, alignment_type="sequenc
         aligner.open_gap_score = -10
         aligner.extend_gap_score = -0.5
         aln = aligner.align(ref_seq, query_seq)[0]
-        alignment.append(aln.format().split("\n")[0])
-        alignment.append(aln.format().split("\n")[2])
+        try: # compatibility between versions of Biopython
+            alignment.append(aln[0])
+            alignment.append(aln[1])
+        except:
+            alignment.append(aln.format().split("\n")[0])
+            alignment.append(aln.format().split("\n")[2])
     else: # work with structural alignments instead
         ref_tempfile = tempfile.NamedTemporaryFile()
         query_tempfile = tempfile.NamedTemporaryFile()
@@ -253,7 +257,7 @@ def get_target_data(paths, chains=None, is_fasta=False, is_mmcif=False):
     else: # fasta file containing one sequence per chain
         target_sequences = [record.seq for record in SeqIO.parse(paths[0], "fasta")]
         target_models = [None for s in target_sequences]
-        target_chains = [ascii_upperlower[i] for i, s in enumerate(target_sequences)]
+        target_chains = chains if chains else [ascii_upperlower[i] for i, s in enumerate(target_sequences)]
 
 
     return target_chains, target_sequences, target_models
@@ -288,7 +292,7 @@ def superimpose(ref_model, ref_chains, query_models, query_chains):
         query_model = query_models[i]
         query_residues = query_model[query_chain].get_residues()
         # align chains, get aligned atoms from reference and query
-        alignment = do_align("_", ref_model[ref_chain], "_", query_model[query_chain], alignment_type="lddt_align")
+        alignment = do_align("_", ref_model[ref_chain], "_", query_model[query_chain], alignment_type="tmalign")
 
         for ref_letter, query_letter in zip(alignment[0], alignment[1]):
             ref_aa = None
@@ -309,6 +313,9 @@ def superimpose(ref_model, ref_chains, query_models, query_chains):
         # merge query models by picking the right chains and adding them to the first
         for i, chain in enumerate(query_chains):
             current_chain = query_models[i][chain]
+            for ch in query_models[i]:
+                if ch is not current_chain:
+                    query_models[i].detach_child(ch.id)
             current_chain.id = ascii_upperlower[i]
             if i > 0:
                 if current_chain.id in query_models[0]:
@@ -328,10 +335,18 @@ def main():
     mmcif_path.mkdir(parents=True, exist_ok=True)
     # we always start from a  fake PDB id "0000", unless there are already templates from a previous run that we would like to add to
     next_id = get_next_id(mmcif_path) if args.append else "0000"
+    fasta_target = is_fasta(args.target[0])
+    args.align = args.align or args.align_tool
 
+    if args.align and not args.align_tool:
+        if fasta_target:
+            args.align_tool = "blast"
+        else:
+            args.align_tool = "tmalign"
+    
     # load target data if needed
-    if args.align_tool or args.superimpose:
-        target_chains, target_sequences, target_models = get_target_data(args.target, chains=args.target_chains, is_fasta=args.fasta_target, is_mmcif=args.mmcif_target)
+    if args.align or args.superimpose:
+        target_chains, target_sequences, target_models = get_target_data(args.target, chains=args.target_chains, is_fasta=fasta_target, is_mmcif=args.mmcif_target)
     
     # Handling the template file: convert to a compatible mmCIF file, write sequences to pdb_seqres.txt
     template_model = load_PDB(args.template, is_mmcif=args.mmcif_template)
@@ -366,7 +381,7 @@ def main():
         with open(af_flagfile_path, "w") as flagfile:
             flagfile.write(f"--template_mmcif_dir={mmcif_path.resolve()}\n")
             flagfile.write(f"--pdb_seqres_database_path={pdb_seqres_path}\n")
-            if args.align_tool: # means we are not going to let AF overwrite pdb_hits.sto
+            if args.align: # means we are not going to let AF overwrite pdb_hits.sto
                 flagfile.write("--use_precomputed_msas\n")
     """
     Handling targets: here alignments are performed against the template
@@ -377,14 +392,14 @@ def main():
     
     If multiple model PDBs are submitted, then we are superimposing several unbound chains to the same template
     """
-    if args.align_tool: # only if an alignment tool is selected, otherwise leave it to AlphaFold's template search
+    if args.align: # only if an alignment tool is selected, otherwise leave it to AlphaFold's template search
 
         assert len(target_chains) == len(template_chains), f"The number of chains to align from target ({target_chains}) doesn't match the number of chains in the template ({template_chains}). Make sure that the files contain the same number of chains or select the chains that should be paired with --target_chains, --template_chains"
         for i, (template_chain, template_sequence, target_chain, target_sequence, target_model) in enumerate(zip(template_chains, template_sequences, target_chains, target_sequences, target_models)):
             msa_chain = ascii_upperlower[i]
             this_template_model = pickle.loads(pickle.dumps(template_model, -1))
             this_target_model = pickle.loads(pickle.dumps(target_model, -1))
-            if not args.fasta_target:
+            if not fasta_target:
                 remove_extra_chains(this_template_model, [template_chain])
                 remove_extra_chains(this_target_model, [target_chain])
             alignment = do_align(template_sequence, this_template_model, target_sequence, this_target_model, alignment_type=args.align_tool)
