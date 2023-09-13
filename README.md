@@ -4,6 +4,10 @@
 
 The installation and setup procedure is the same as for the regular version of AlphaFold (non-docker version). We recommend Anaconda and mamba along with pip3 to manage the necessary software packages:
 
+1. [Install Anaconda/Miniconda](https://conda.io/projects/conda/en/latest/user-guide/install/index.html)
+
+2. Set up conda environment, install dependencies:
+
 ```bash
 conda create -n AF_unmasked python=3.9 mamba
 conda activate AF_unmasked
@@ -16,7 +20,7 @@ cd AF_unmasked/
 pip3 install -r requirements.txt
 ```
 
-Download and set up the AF parameters and sequence databases:
+3. Download and set up the AF parameters and sequence databases:
 
 ```bash
 cd scripts
@@ -24,7 +28,6 @@ chmod +x download_all_data.sh
 
 ./download_all_data.sh ../AF_databases/ reduced_dbs
 ```
-
 
 ## Preparing multimeric templates
 
