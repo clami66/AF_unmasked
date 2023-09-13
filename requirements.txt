@@ -6,6 +6,7 @@ dm-tree==0.1.6
 docker==5.0.0
 immutabledict==2.0.0
 jax==0.3.25
+jaxlib==0.3.25
 ml-collections==0.1.0
 numpy==1.21.6
 pandas==1.3.4
