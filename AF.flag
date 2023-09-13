@@ -1,0 +1,12 @@
+--use_precomputed_msas
+--data_dir=AF_data/
+--obsolete_pdbs_path=AF_data/pdb_mmcif/obsolete.dat
+--mgnify_database_path=AF_data/mgnify/mgy_clusters_2018_12.fa
+--uniref90_database_path=AF_data/uniref90/uniref90.fasta
+--max_template_date=3000-01-01
+--use_gpu_relax=True
+--model_preset=multimer
+--db_preset=full_dbs
+--uniref30_database_path=AF_data/uniclust30/UniRef30_2021_03/UniRef30_2021_03
+--bfd_database_path=AF_data/bfd/bfd_metaclust_clu_complete_id30_c90_final_seq.sorted_opt
+--uniprot_database_path=AF_data/uniprot/uniprot.fasta

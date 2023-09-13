@@ -26,7 +26,7 @@ pip3 install -r requirements.txt
 cd scripts
 chmod +x download_all_data.sh
 
-./download_all_data.sh ../AF_databases/ reduced_dbs
+./download_all_data.sh ../AF_data/ reduced_dbs
 ```
 
 ## Preparing multimeric templates
@@ -131,7 +131,9 @@ The `template_data/templates.flag` file is a flagfile that should be passed to A
 
 ## Running AlphaFold
 
-Once templates have been prepared, invoke AlphaFold with the generated flagfile. Use the `--cross_chain_templates` or `--cross_chain_templates_only` flags if you want to use both intra- and inter-chain constraints from the template, or inter-chain constraints alone:
+Once templates have been prepared, invoke AlphaFold with the generated flagfile (inside the `template_data` folder) along with the standard flagfile (`AF.flag` in this repository). 
+
+Use the `--cross_chain_templates` or `--cross_chain_templates_only` flags if you want to use both intra- and inter-chain constraints from the template, or inter-chain constraints alone:
 
 ```
 python run_alphafold.py --fasta_paths examples/H1137/H1137.fasta --flagfile examples/H1137/template_data/templates.flag --output_dir examples --cross_chain_templates --dropout --model_preset='multimer_v2'
@@ -142,14 +144,14 @@ python run_alphafold.py --fasta_paths examples/H1137/H1137.fasta --flagfile exam
 whenever running with homomers, or multimers containing multiple copies of any given chain, make sure to add the `--separate_homomer_msas` flag, in order to force AlphaFold to read the correct `pdb_hits.sto` template alignment:
 
 ```
-python run_alphafold.py --fasta_paths examples/H1137/H1137.fasta --flagfile examples/H1137/template_data/templates.flag --output_dir examples --cross_chain_templates --dropout --model_preset='multimer_v2' --separate_homomer_msas
+python run_alphafold.py --fasta_paths examples/H1137/H1137.fasta --flagfile ./AF.flag --flagfile examples/H1137/template_data/templates.flag --output_dir examples --cross_chain_templates --dropout --model_preset='multimer_v2' --separate_homomer_msas
 ```
 
 ## Clipping the MSAs to speedup computation
 
 Use the `[uniprot,mgnify,uniref,bfd]_max_hits` flags to limit the number of sequences to include from each alignment file. For example, if we only want to use 200 sequences from mgnify and uniref, while only keeping a single sequence from other alignments:
 
-`python run_alphafold.py --fasta_paths examples/H1137/H1137.fasta --flagfile examples/H1137/template_data/templates.flag --output_dir examples --cross_chain_templates --dropout --model_preset='multimer_v2' --separate_homomer_msas --uniprot_max_hits 1 --mgnify_max_hits 200 --uniref_max_hits 200 --bfd_max_hits 1 `
+`python run_alphafold.py --fasta_paths examples/H1137/H1137.fasta --flagfile ./AF.flag --flagfile examples/H1137/template_data/templates.flag --output_dir examples --cross_chain_templates --dropout --model_preset='multimer_v2' --separate_homomer_msas --uniprot_max_hits 1 --mgnify_max_hits 200 --uniref_max_hits 200 --bfd_max_hits 1 `
 
 Limiting the number of alignments from MSAs forces AlphaFold to rely more on the templates, while speeding up computation. Maximum speedup is achieved by making sure that the maximum total number of sequences in the final alignment is no more than 512.
 
