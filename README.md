@@ -18,7 +18,7 @@ mamba install -c bioconda tmalign kalign3=3.2.2 hhsuite=3.3.0 hmmer=3.3.2
 # clone this repository
 git clone https://github.com/clami66/AF_unmasked.git
 cd AF_unmasked/
-pip3 install -r requirements.txt
+python -m pip install -r requirements.txt
 ```
 
 3. [optional] Download and set up the AF parameters and sequence databases. We recommend downloading the reduced set of databases since evolutionary inputs are not as important when a good template is provided. If the full databases are needed, run the following by omitting `reduced_dbs`:
@@ -139,7 +139,7 @@ Once templates have been prepared, invoke AlphaFold with the generated flagfile 
 Use the `--cross_chain_templates` or `--cross_chain_templates_only` flags if you want to use both intra- and inter-chain constraints from the template, or inter-chain constraints alone:
 
 ```
-python run_alphafold.py --fasta_paths examples/H1137/H1137.fasta --flagfile examples/H1137/template_data/templates.flag --output_dir examples --cross_chain_templates --dropout --model_preset='multimer_v2'
+python run_alphafold.py --fasta_paths examples/H1137/H1137.fasta --flagfile ./AF.flag --flagfile examples/H1137/template_data/templates.flag --output_dir examples --cross_chain_templates --dropout --model_preset='multimer_v2'
 ```
 
 ## Predicting homomers
