@@ -5,15 +5,26 @@
 The installation and setup procedure is the same as for the regular version of AlphaFold (non-docker version). We recommend Anaconda and mamba along with pip3 to manage the necessary software packages:
 
 ```bash
+conda create -n AF_unmasked python=3.9 mamba
+conda activate AF_unmasked
+# install sequence/structure alignment softwares, aria2 for downloads
+mamba install -c bioconda tmalign aria2 kalign3=3.2.2 hhsuite=3.3.0 hmmer=3.3.2
 
-mamba create -n af_multitemplate python=3.9
-mamba activate AF_multitemplate
-mamba install -c bioconda tmalign
-
-git clone https://github.com/clami66/AF_multitemplate.git
-cd AF_multitemplate/
+# clone this repository
+git clone https://github.com/clami66/AF_unmasked.git
+cd AF_unmasked/
 pip3 install -r requirements.txt
 ```
+
+Download and set up the AF parameters and sequence databases:
+
+```bash
+cd scripts
+chmod +x download_all_data.sh
+
+./download_all_data.sh ../AF_databases/ reduced_dbs
+```
+
 
 ## Preparing multimeric templates
 
