@@ -20,7 +20,7 @@ cd AF_unmasked/
 pip3 install -r requirements.txt
 ```
 
-3. Download and set up the AF parameters and sequence databases. We recommend downloading the reduced set of databases since evolutionary inputs are not as important when a good template is provided. If the full databases are needed, run the following by omitting `reduced_dbs`:
+3. [optional] Download and set up the AF parameters and sequence databases. We recommend downloading the reduced set of databases since evolutionary inputs are not as important when a good template is provided. If the full databases are needed, run the following by omitting `reduced_dbs`:
 
 ```bash
 cd scripts
@@ -28,6 +28,8 @@ chmod +x download_all_data.sh
 
 ./download_all_data.sh ../AF_data/ reduced_dbs
 ```
+
+If you have databases and parameters from a precedent AlphaFold installation, it is not necessary to repeat this step, just make sure that the paths inside `AF.flag` point to the right directories.
 
 ## Preparing multimeric templates
 
@@ -157,4 +159,6 @@ Limiting the number of alignments from MSAs forces AlphaFold to rely more on the
 
 ## References
 
-If you use AF_multitemplate you can reference: [DOI]
+If you use AF_unmasked you can reference: [DOI]
+
+As well as the original [AlphaFold](https://doi.org/10.1038/s41586-021-03819-2) and [AlphaFold-Multimer](https://www.biorxiv.org/content/10.1101/2021.10.04.463034v1) papers.

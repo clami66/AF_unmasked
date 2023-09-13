@@ -34,7 +34,16 @@ ROOT_DIR="${DOWNLOAD_DIR}/params"
 SOURCE_URL="https://storage.googleapis.com/alphafold/alphafold_params_2022-12-06.tar"
 BASENAME=$(basename "${SOURCE_URL}")
 
+# Default weights
 mkdir --parents "${ROOT_DIR}"
+aria2c "${SOURCE_URL}" --dir="${ROOT_DIR}"
+tar --extract --verbose --file="${ROOT_DIR}/${BASENAME}" \
+  --directory="${ROOT_DIR}" --preserve-permissions
+rm "${ROOT_DIR}/${BASENAME}"
+
+# Download deprecated v2 weights as well
+SOURCE_URL="https://storage.googleapis.com/alphafold/alphafold_params_2022-03-02.tar"
+BASENAME=$(basename "${SOURCE_URL}")
 aria2c "${SOURCE_URL}" --dir="${ROOT_DIR}"
 tar --extract --verbose --file="${ROOT_DIR}/${BASENAME}" \
   --directory="${ROOT_DIR}" --preserve-permissions
