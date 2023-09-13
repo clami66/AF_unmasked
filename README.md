@@ -2,7 +2,18 @@
 
 ## Installing AF_multitemplate
 
-The installation and setup procedure is the same as for the regular version of AlphaFold (non-docker version).
+The installation and setup procedure is the same as for the regular version of AlphaFold (non-docker version). We recommend Anaconda and mamba along with pip3 to manage the necessary software packages:
+
+```bash
+
+mamba create -n af_multitemplate python=3.9
+mamba activate AF_multitemplate
+mamba install -c bioconda tmalign
+
+git clone https://github.com/clami66/AF_multitemplate.git
+cd AF_multitemplate/
+pip3 install -r requirements.txt
+```
 
 ## Preparing multimeric templates
 
@@ -13,9 +24,12 @@ This version of AlphaFold comes with a python script `prepare_templates.py` to s
 If you have a `target.fasta` file containing multiple sequences:
 
 ```
->target_A_chain
-AAAAAAA...
->target_B_chain
+>H1137,subunit1|
+MTEPPAPTAPLNKPKTPPYKLAGLILGLVGVLVLALTWMQFRGQFEDKVQLTVLSGRAGLSMDPGSKVTFNGVPIGRLASIDVVEVDDNPEARLTLDVDPKYLDLIPENANVELRATTVFGNKYISFLSPKNPSAERLSASTPIRAQGVTTEFNTLFETITAISEQVDPIKLNETLTAAAQALDGLGDKFGRSIVDGNAILADVNPRMPQIRRDITGLANLGEVYADASPDLFDGLDNAVTTARTLNEQRGNLDQALVAAVGFGNTGGDIFERGGPYLVRGAQDLLPTSALLDEYSPALFCTIRNYHDAAPKLAGALGGNGYSLLTNSLVVGVGNPYVYPDNLPRVNAKGGPEGRPGCWQPITRDLWPFPYLVMDTGASIAPYNHFELGQPMFAEYVWGRQVGENTINP
+>H1137,subunit2|
+MSIKGTLFKLGIFSLVLLTFTALIFVVFGQIRFNRTTEYSAIFKNVSGLRDGQFVRAAGVEVGKVKSVDLINGGEQAEVKFTVERSLPLFQETTAAIRYQDLIGNRYLELKRGDSDQILPPGSTIPVERTEPALDLDALVGGFRPLFRSLEPEKVNTIATSLITIFQGQGGTINDILDQTAQLTASLADRDQAIGEVIKNLNTVLDTTVRHQKQFDETLVNFETLITGLKNRADPIATSVADISDAAGSLADLLSDNRPLLKDTIGYLDVIQAPLVEQKQEVSDILVQMPQALKIIGRAGGIYGDFFNFYACDLTLKLNGLQPGGPVRTVRITTQPSGRCTPK
+>H1137,subunit3|
+MRTLQGSDRFRKGLMGVIVVALIIGVGSTLTSVPMLFAVPTYYGQFADTGGLNIGDKVRIAGMDVGNVKSMEIDGDKVVIGYTLGGRTIGTESRAAIRTDTILGRKNIEIEPRGSETLKPRGVLPVGQTSAPYQIYDAFLDVTRNAAGWDTQAVRQSLNVLSETVDQTSPHLSAALDGVARFSETIGKRDEDVKKLLASANKVATVLGDRSTQVNQLLVNAQTLLAAVNERGRSVSLLLERVSSVSRQVEGFVDENPNLNHVLEQLRTVSDVLNERKQDLADILTVAGKFITSLAEALASGPYFKVMLVNLIPPTILQPFVDAAFKKRGIDPEEFWRNAGLPAFRFPDPNGERHENGAPPAAPTPLEGTPEHPGPAVPPGSPCSYTPPADGIPSPGNPLPCAHLSQGPYGPVPGGYPPPNVATSAPNPDGIAHSPGVPSAAIPGQMPPEQPGAPVEIAPGPPGARTVPVSPIPGAPDFTPGIAPPPPAITGPPPPPGPGPQLAPVGEAPLPGNPPFLPPGSQSR
 ...
 ```
 
@@ -27,34 +41,36 @@ python prepare_templates.py --target examples/H1137/H1137.fasta --template examp
 
 **Chain mapping flags**
 
-This assumes that the first chain in the `.fasta` file maps to the first chain in the `.pdb` template, and so on. If not, it is necessary to specify the mapping. For example, if the first sequence in the `.fasta` file maps to the `B` chain in the template, and the second sequence maps to the `A` chain in the template, run:
+This assumes that the first chain in the `.fasta` file maps to the first chain in the `.pdb` template, and so on. If not, it is necessary to specify the mapping. For example, if the first sequence in the `.fasta` file maps to the `B` chain in the template, and the second sequence maps to the `C` chain in the template, you can run:
 
 ```
-python prepare_templates.py --target ./test.fasta --template ./template.pdb --out_dir ./test/ --target_chains A B --template_chains B A
+python prepare_templates.py --target examples/H1142/H1142.fasta --template examples/H1142/H1142.pdb --out_dir examples/H1142/ --align --target_chains A B --template_chains B C
 ```
 
 The `--target_chains`/`--template_chains` mapping flags are also necessary when the template contains more/fewer chains than there are sequences in the input `.fasta` file.
 
 **Input structures instead of sequences**
 
-It is possible to prepare templates starting from `.pdb`/`.cif` files instead of `.fasta` sequences. This is useful, for example, when the user wants to start from monomeric predictions of each input sequence to align against a multimer template structure. For example, if two unbound structures for chains `A` and `B` are available in `.pdb` format:
+It is possible to prepare templates starting from `.pdb`/`.cif` files instead of `.fasta` sequences. This is useful, for example, when the user wants to start from monomeric predictions of each target chain and align them against a multimer template structure. For example, if two unbound structures for chains `A` and `B` are available in PDB format:
 
 ```
-python prepare_templates.py --target ./test_A.pdb ./test_B.pdb --template ./template.pdb --out_dir ./test/ --align_tool tmalign # align with TM-align
+python prepare_templates.py --target examples/H1142/casp15_predictions/unbound_chain_A.pdb examples/H1142/casp15_predictions/unbound_chain_B.pdb --template examples/H1142/H1142.pdb --out_dir examples/H1142/ --align
+```
 
-# or:
+The target chains can also come from the same PDB file, in that case it might be necessary to provide the chain mapping flags:
 
-python prepare_templates.py --target ./test_A.pdb ./test_B.pdb --template ./template.pdb --out_dir ./test/ --align_tool lddt_align # align with lDDT_align
+```
+python prepare_templates.py --target examples/H1142/casp15_predictions/unbound_chains.pdb --template examples/H1142/H1142.pdb --out_dir examples/H1142/ --align --target_chains A B --template_chains B C
 ```
 
 The target/template files are in `.pdb` format by default, but mmCIF is also supported. The `--mmcif_target`/`--mmcif_template` flags are expected in that case.
 
-**Assembly unbound structures onto template**
+**Assembling unbound structures onto template**
 
 When a template for an interaction is available that is a remote homolog of the target interaction, it might be useful to superimpose unbound monomers onto the template to create a coarse interaction model. Then, the coarse model made from putting together the unbound monomers will be itself used as template. This can be done with the `--superimpose` flag:
 
 ```
-python prepare_templates.py --target ./test_A.pdb ./test_B.pdb --template ./template.pdb --out_dir ./test/ --align_tool tmalign # align with TM-align --superimpose
+python prepare_templates.py --target examples/H1142/casp15_predictions/unbound_chain_A.pdb examples/H1142/casp15_predictions/unbound_chain_B.pdb --template examples/H1142/H1142.pdb --out_dir examples/H1142/ --align --superimpose
 ```
 
 **Adding further templates**
@@ -62,11 +78,11 @@ AlphaFold takes up to four structural templates as input. Once the first templat
 
 ```
 # prepare the first template
-python prepare_templates.py --target ./test.fasta --template ./template1.pdb --out_dir ./test/
+python prepare_templates.py --target examples/H1137/H1137.fasta --template examples/H1137/H1137.pdb --out_dir examples/H1137/ --align
 # running the same command three more times to fill the four template slots while using different templates
-python prepare_templates.py --target ./test.fasta --template ./template2.pdb --out_dir ./test/ --append
-python prepare_templates.py --target ./test.fasta --template ./template3.pdb --out_dir ./test/ --append
-python prepare_templates.py --target ./test.fasta --template ./template4.pdb --out_dir ./test/ --append
+python prepare_templates.py --target examples/H1137/H1137.fasta --template examples/H1137/H1137.pdb --out_dir examples/H1137/ --align --append
+python prepare_templates.py --target examples/H1137/H1137.fasta --template examples/H1137/H1137.pdb --out_dir examples/H1137/ --align --append
+python prepare_templates.py --target examples/H1137/H1137.fasta --template examples/H1137/H1137.pdb --out_dir examples/H1137/ --align --append
 ```
 
 ## Outputs
