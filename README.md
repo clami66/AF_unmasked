@@ -20,7 +20,7 @@ cd AF_unmasked/
 pip3 install -r requirements.txt
 ```
 
-3. Download and set up the AF parameters and sequence databases:
+3. Download and set up the AF parameters and sequence databases. We recommend downloading the reduced set of databases since evolutionary inputs are not as important when a good template is provided. If the full databases are needed, run the following by omitting `reduced_dbs`:
 
 ```bash
 cd scripts

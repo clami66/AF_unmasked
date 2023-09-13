@@ -9,5 +9,5 @@
 --db_preset=reduced_dbs
 --uniref30_database_path=AF_data/uniclust30/UniRef30_2021_03/UniRef30_2021_03
 --bfd_database_path=AF_data/bfd/bfd_metaclust_clu_complete_id30_c90_final_seq.sorted_opt
---small_bfd_database_path=AF_data/small_bfd/bfd_metaclust_clu_complete_id30_c90_final_seq.sorted_opt
+--small_bfd_database_path=AF_data/small_bfd/bfd-first_non_consensus_sequences
 --uniprot_database_path=AF_data/uniprot/uniprot.fasta
