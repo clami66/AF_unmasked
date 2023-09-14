@@ -1,5 +1,4 @@
-# AlphaFold unmasked 
-### for better integrative structural biology experiments
+# AlphaFold unmasked <br><sup>for better integrative structural biology experiments</sup>
 
 ![H1111](fig/header.png)
 
