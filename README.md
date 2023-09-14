@@ -1,6 +1,6 @@
-# AlphaFold for integrative structural biology experiments
+# AlphaFold unmasked for better integrative structural biology experiments
 
-## Installing AF_multitemplate
+## Installing AF_unmasked
 
 The installation and setup procedure is the same as for the regular version of AlphaFold (non-docker version). We recommend Anaconda and mamba along with pip3 to manage the necessary software packages:
 
