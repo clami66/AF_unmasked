@@ -34,6 +34,8 @@ chmod +x download_all_data.sh
 
 If you have databases and parameters from a precedent AlphaFold installation, it is not necessary to repeat this step, just make sure that the paths inside `AF.flag` point to the right directories.
 
+4. [optional] Install [lDDT_align](https://github.com/clami66/lDDT_align) if you want to perform superposition-free structural alignments
+
 ## Preparing multimeric templates
 
 This version of AlphaFold comes with a python script `prepare_templates.py` to set up multimeric templates before a run.
