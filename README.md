@@ -14,7 +14,7 @@ The installation and setup procedure is the same as for the regular version of A
 conda create -n AF_unmasked -c conda-forge python=3.9 mamba
 conda activate AF_unmasked
 # install sequence/structure alignment softwares, aria2 for downloads
-mamba install -c conda-forge aria2 openmm=7.5.1
+mamba install -c conda-forge aria2 openmm=7.5.1 cudnn=8.2.1.32
 mamba install -c bioconda tmalign kalign3=3.2.2 hhsuite=3.3.0 hmmer=3.3.2
 
 # clone this repository
