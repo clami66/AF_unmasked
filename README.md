@@ -1,4 +1,4 @@
-# AlphaFold unmasked <br><sup>for better integrative structural biology experiments</sup>
+# AlphaFold unmasked <br><sup>to integrate experiments and predictions</sup>
 
 ![H1111](fig/header.png)
 
@@ -13,12 +13,13 @@ The installation and setup procedure is the same as for the regular version of A
 ```bash
 conda create -n AF_unmasked -c conda-forge python=3.9 mamba
 conda activate AF_unmasked
-# install sequence/structure alignment softwares, aria2 for downloads
-mamba env update --file environment.yaml
 
 # clone this repository
 git clone https://github.com/clami66/AF_unmasked.git
 cd AF_unmasked/
+
+# install requirements
+mamba env update --file environment.yaml
 python -m pip install -r requirements.txt
 ```
 
