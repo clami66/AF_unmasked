@@ -1,2 +1,2 @@
---template_mmcif_dir=/home/claudio/Documents/NBIS_projects/BeyondFold/AF_multitemplate/examples/H1142/template_data/mmcif_files
---pdb_seqres_database_path=/home/claudio/Documents/NBIS_projects/BeyondFold/AF_multitemplate/examples/H1142/template_data/pdb_seqres.txt
+--template_mmcif_dir=examples/H1142/template_data/mmcif_files
+--pdb_seqres_database_path=examples/H1142/template_data/pdb_seqres.txt
