@@ -38,7 +38,7 @@ def parse_args():
         required=True,
     )
     parser.add_argument(
-        "--out_dir",
+        "--out_dir", "--output_dir",
         type=str,
         help="path to output folder, which will include the template's structure, stockholm alignments and flagfile for usage on AlphaFold",
         default="./AF_models",

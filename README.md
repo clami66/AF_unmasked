@@ -59,11 +59,11 @@ And a `.pdb`/`.cif` file containing as many template chains as there are target 
 ```
 python prepare_templates.py --target examples/H1137/H1137.fasta \
     --template examples/H1137/H1137.pdb \
-    --out_dir examples/ \
+    --output_dir AF_models/ \
     --align
 ```
 
-When using a `.fasta` target, the outputs will be saved in a subfolder inside `out_dir` with the same name as the fasta file. In this case, the outputs will be stored inside `examples/H1137` because the fasta filename is `H1137.fasta`.
+When using a `.fasta` target, the outputs will be saved in a subfolder inside `output_dir` with the same name as the fasta file. In this case, the outputs will be stored inside `AF_models/H1137` because the fasta filename is `H1137.fasta`.
 
 **Chain mapping flags**
 
@@ -72,7 +72,7 @@ The previous example assumes that the first chain in the `.fasta` file maps to t
 ```
 python prepare_templates.py --target examples/H1142/H1142.fasta \
     --template examples/H1142/H1142.pdb \
-    --out_dir examples/ \
+    --output_dir AF_models/ \
     --align \
     --target_chains A B \
     --template_chains B C
@@ -88,16 +88,18 @@ It is possible to prepare templates starting from `.pdb`/`.cif` files instead of
 python prepare_templates.py --target examples/H1142/casp15_predictions/unbound_chain_A.pdb \
     examples/H1142/casp15_predictions/unbound_chain_B.pdb \
     --template examples/H1142/H1142.pdb \
-    --out_dir examples/H1142 \
+    --output_dir AF_models/H1142 \
     --align
 ```
+
+NB: in this case, the user needs to manually add to the output directory the name of the `.fasta` file that will be used in the AlphaFold run (`H1142.fasta` -> `--output_dir AF_models/H1142`).
 
 The target chains can also come from the same PDB file, in that case it might be necessary to provide the chain mapping flags:
 
 ```
 python prepare_templates.py --target examples/H1142/casp15_predictions/unbound_chains.pdb \
     --template examples/H1142/H1142.pdb \
-    --out_dir examples/H1142 \
+    --output_dir AF_models/H1142 \
     --align \
     --target_chains A B \
     --template_chains B C
@@ -113,7 +115,7 @@ When a template for an interaction is available that is a remote homolog of the 
 python prepare_templates.py --target examples/H1142/casp15_predictions/unbound_chain_A.pdb \
     examples/H1142/casp15_predictions/unbound_chain_B.pdb \
     --template examples/H1142/H1142.pdb \
-    --out_dir examples/H1142 \
+    --output_dir AF_models/H1142 \
     --align \
     --superimpose
 ```
@@ -123,11 +125,11 @@ AlphaFold takes up to four structural templates as input. Once the first templat
 
 ```
 # prepare the first template
-python prepare_templates.py --target examples/H1137/H1137.fasta --template examples/H1137/H1137.pdb --out_dir examples/ --align
+python prepare_templates.py --target examples/H1137/H1137.fasta --template examples/H1137/H1137.pdb --output_dir AF_models/ --align
 # running the same command three more times to fill the four template slots while using different templates
-python prepare_templates.py --target examples/H1137/H1137.fasta --template examples/H1137/H1137.pdb --out_dir examples/ --align --append
-python prepare_templates.py --target examples/H1137/H1137.fasta --template examples/H1137/H1137.pdb --out_dir examples/ --align --append
-python prepare_templates.py --target examples/H1137/H1137.fasta --template examples/H1137/H1137.pdb --out_dir examples/ --align --append
+python prepare_templates.py --target examples/H1137/H1137.fasta --template examples/H1137/H1137.pdb --output_dir AF_models/ --align --append
+python prepare_templates.py --target examples/H1137/H1137.fasta --template examples/H1137/H1137.pdb --output_dir AF_models/ --align --append
+python prepare_templates.py --target examples/H1137/H1137.fasta --template examples/H1137/H1137.pdb --output_dir AF_models/ --align --append
 ```
 
 ## Outputs
@@ -170,7 +172,7 @@ Use the `--cross_chain_templates` or `--cross_chain_templates_only` flags if you
 python run_alphafold.py --fasta_paths examples/H1137/H1137.fasta \
     --flagfile ./databases.flag \
     --flagfile examples/H1137/template_data/templates.flag \
-    --output_dir examples \
+    --output_dir AF_models \
     --cross_chain_templates \
     --dropout \
     --model_preset='multimer_v2'
@@ -184,7 +186,7 @@ whenever running with homomers, or multimers containing multiple copies of any g
 python run_alphafold.py --fasta_paths examples/H1137/H1137.fasta \
     --flagfile ./databases.flag \
     --flagfile examples/H1137/template_data/templates.flag \
-    --output_dir examples \
+    --output_dir AF_models \
     --cross_chain_templates \
     --dropout \
     --model_preset='multimer_v2' \
@@ -199,7 +201,7 @@ Use the `[uniprot,mgnify,uniref,bfd]_max_hits` flags to limit the number of sequ
 python run_alphafold.py --fasta_paths examples/H1137/H1137.fasta \
     --flagfile ./databases.flag \
     --flagfile examples/H1137/template_data/templates.flag \
-    --output_dir examples \
+    --output_dir AF_models \
     --cross_chain_templates \
     --dropout \
     --model_preset='multimer_v2' \
