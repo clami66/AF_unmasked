@@ -1,4 +1,3 @@
---use_precomputed_msas
 --data_dir=AF_data/
 --obsolete_pdbs_path=AF_data/pdb_mmcif/obsolete.dat
 --mgnify_database_path=AF_data/mgnify/mgy_clusters_2018_12.fa
