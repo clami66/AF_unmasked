@@ -57,7 +57,10 @@ MRTLQGSDRFRKGLMGVIVVALIIGVGSTLTSVPMLFAVPTYYGQFADTGGLNIGDKVRIAGMDVGNVKSMEIDGDKVVI
 And a `.pdb`/`.cif` file containing as many template chains as there are target chains in the fasta file, you can run e.g.:
 
 ```
-python prepare_templates.py --target examples/H1137/H1137.fasta --template examples/H1137/H1137.pdb --out_dir examples/ --align
+python prepare_templates.py --target examples/H1137/H1137.fasta \
+    --template examples/H1137/H1137.pdb \
+    --out_dir examples/ \
+    --align
 ```
 
 When using a `.fasta` target, the outputs will be saved in a subfolder inside `out_dir` with the same name as the fasta file. In this case, the outputs will be stored inside `examples/H1137` because the fasta filename is `H1137.fasta`.
@@ -67,7 +70,12 @@ When using a `.fasta` target, the outputs will be saved in a subfolder inside `o
 The previous example assumes that the first chain in the `.fasta` file maps to the first chain in the `.pdb` template, and so on. If not, it is necessary to specify the mapping. For example, if the first sequence in the `.fasta` file maps to the `B` chain in the template, and the second sequence maps to the `C` chain in the template, you can run:
 
 ```
-python prepare_templates.py --target examples/H1142/H1142.fasta --template examples/H1142/H1142.pdb --out_dir examples/ --align --target_chains A B --template_chains B C
+python prepare_templates.py --target examples/H1142/H1142.fasta \
+    --template examples/H1142/H1142.pdb \
+    --out_dir examples/ \
+    --align \
+    --target_chains A B \
+    --template_chains B C
 ```
 
 The `--target_chains`/`--template_chains` mapping flags are also necessary when the template contains more/fewer chains than there are sequences in the input `.fasta` file.
@@ -77,13 +85,22 @@ The `--target_chains`/`--template_chains` mapping flags are also necessary when 
 It is possible to prepare templates starting from `.pdb`/`.cif` files instead of `.fasta` sequences. This is useful, for example, when the user wants to start from monomeric predictions of each target chain and align them against a multimer template structure. For example, if two unbound structures for chains `A` and `B` are available in PDB format:
 
 ```
-python prepare_templates.py --target examples/H1142/casp15_predictions/unbound_chain_A.pdb examples/H1142/casp15_predictions/unbound_chain_B.pdb --template examples/H1142/H1142.pdb --out_dir examples/H1142 --align
+python prepare_templates.py --target examples/H1142/casp15_predictions/unbound_chain_A.pdb \
+    examples/H1142/casp15_predictions/unbound_chain_B.pdb \
+    --template examples/H1142/H1142.pdb \
+    --out_dir examples/H1142 \
+    --align
 ```
 
 The target chains can also come from the same PDB file, in that case it might be necessary to provide the chain mapping flags:
 
 ```
-python prepare_templates.py --target examples/H1142/casp15_predictions/unbound_chains.pdb --template examples/H1142/H1142.pdb --out_dir examples/H1142 --align --target_chains A B --template_chains B C
+python prepare_templates.py --target examples/H1142/casp15_predictions/unbound_chains.pdb \
+    --template examples/H1142/H1142.pdb \
+    --out_dir examples/H1142 \
+    --align \
+    --target_chains A B \
+    --template_chains B C
 ```
 
 The target/template files are in `.pdb` format by default, but mmCIF is also supported. The `--mmcif_target`/`--mmcif_template` flags are expected in that case.
@@ -93,7 +110,12 @@ The target/template files are in `.pdb` format by default, but mmCIF is also sup
 When a template for an interaction is available that is a remote homolog of the target interaction, it might be useful to superimpose unbound monomers onto the template to create a coarse interaction model. Then, the coarse model made from putting together the unbound monomers will be itself used as template. This can be done with the `--superimpose` flag:
 
 ```
-python prepare_templates.py --target examples/H1142/casp15_predictions/unbound_chain_A.pdb examples/H1142/casp15_predictions/unbound_chain_B.pdb --template examples/H1142/H1142.pdb --out_dir examples/H1142 --align --superimpose
+python prepare_templates.py --target examples/H1142/casp15_predictions/unbound_chain_A.pdb \
+    examples/H1142/casp15_predictions/unbound_chain_B.pdb \
+    --template examples/H1142/H1142.pdb \
+    --out_dir examples/H1142 \
+    --align \
+    --superimpose
 ```
 
 **Adding further templates**
@@ -145,7 +167,13 @@ Once templates have been prepared, invoke AlphaFold with the generated flagfile 
 Use the `--cross_chain_templates` or `--cross_chain_templates_only` flags if you want to use both intra- and inter-chain constraints from the template, or inter-chain constraints alone:
 
 ```
-python run_alphafold.py --fasta_paths examples/H1137/H1137.fasta --flagfile ./databases.flag --flagfile examples/H1137/template_data/templates.flag --output_dir examples --cross_chain_templates --dropout --model_preset='multimer_v2'
+python run_alphafold.py --fasta_paths examples/H1137/H1137.fasta \
+    --flagfile ./databases.flag \
+    --flagfile examples/H1137/template_data/templates.flag \
+    --output_dir examples \
+    --cross_chain_templates \
+    --dropout \
+    --model_preset='multimer_v2'
 ```
 
 ## Predicting homomers
@@ -153,14 +181,34 @@ python run_alphafold.py --fasta_paths examples/H1137/H1137.fasta --flagfile ./da
 whenever running with homomers, or multimers containing multiple copies of any given chain, make sure to add the `--separate_homomer_msas` flag, in order to force AlphaFold to read the correct `pdb_hits.sto` template alignment:
 
 ```
-python run_alphafold.py --fasta_paths examples/H1137/H1137.fasta --flagfile ./databases.flag --flagfile examples/H1137/template_data/templates.flag --output_dir examples --cross_chain_templates --dropout --model_preset='multimer_v2' --separate_homomer_msas
+python run_alphafold.py --fasta_paths examples/H1137/H1137.fasta \
+    --flagfile ./databases.flag \
+    --flagfile examples/H1137/template_data/templates.flag \
+    --output_dir examples \
+    --cross_chain_templates \
+    --dropout \
+    --model_preset='multimer_v2' \
+    --separate_homomer_msas
 ```
 
 ## Clipping the MSAs to speedup computation
 
 Use the `[uniprot,mgnify,uniref,bfd]_max_hits` flags to limit the number of sequences to include from each alignment file. For example, if we only want to use 200 sequences from mgnify and uniref, while only keeping a single sequence from other alignments:
 
-`python run_alphafold.py --fasta_paths examples/H1137/H1137.fasta --flagfile ./databases.flag --flagfile examples/H1137/template_data/templates.flag --output_dir examples --cross_chain_templates --dropout --model_preset='multimer_v2' --separate_homomer_msas --uniprot_max_hits 1 --mgnify_max_hits 200 --uniref_max_hits 200 --bfd_max_hits 1 `
+```
+python run_alphafold.py --fasta_paths examples/H1137/H1137.fasta \
+    --flagfile ./databases.flag \
+    --flagfile examples/H1137/template_data/templates.flag \
+    --output_dir examples \
+    --cross_chain_templates \
+    --dropout \
+    --model_preset='multimer_v2' \
+    --separate_homomer_msas \
+    --uniprot_max_hits 1 \
+    --mgnify_max_hits 200 \
+    --uniref_max_hits 200 \
+    --bfd_max_hits 1
+```
 
 Limiting the number of alignments from MSAs forces AlphaFold to rely more on the templates, while speeding up computation. Maximum speedup is achieved by making sure that the maximum total number of sequences in the final alignment is no more than 512.
 
