@@ -410,7 +410,7 @@ def main():
                 for line in sto_alignment:
                     pdb_hits.write(line)
         
-    print(f"Run AlphaFold with, e.g.:\npython $ALPHAFOLD_PATH/run_alphafold.py --fasta_paths $INPUT_FASTA --flagfile {af_flagfile_path} --output_dir {Path(args.out_dir).parents[0]} --cross_chain_templates --dropout --model_preset='multimer_v2'")
+    print(f"Run AlphaFold with, e.g.:\npython run_alphafold.py --fasta_paths $INPUT_FASTA --flagfile databases.flag --flagfile {af_flagfile_path} --output_dir {Path(args.out_dir).parents[0]} --cross_chain_templates --dropout --model_preset='multimer_v2'")
 
 
 if __name__ == "__main__":
