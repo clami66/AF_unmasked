@@ -64,7 +64,7 @@ When using a `.fasta` target, the outputs will be saved in a subfolder inside `o
 
 **Chain mapping flags**
 
-This assumes that the first chain in the `.fasta` file maps to the first chain in the `.pdb` template, and so on. If not, it is necessary to specify the mapping. For example, if the first sequence in the `.fasta` file maps to the `B` chain in the template, and the second sequence maps to the `C` chain in the template, you can run:
+The previous example assumes that the first chain in the `.fasta` file maps to the first chain in the `.pdb` template, and so on. If not, it is necessary to specify the mapping. For example, if the first sequence in the `.fasta` file maps to the `B` chain in the template, and the second sequence maps to the `C` chain in the template, you can run:
 
 ```
 python prepare_templates.py --target examples/H1142/H1142.fasta --template examples/H1142/H1142.pdb --out_dir examples/ --align --target_chains A B --template_chains B C
