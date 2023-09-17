@@ -75,13 +75,13 @@ The `--target_chains`/`--template_chains` mapping flags are also necessary when 
 It is possible to prepare templates starting from `.pdb`/`.cif` files instead of `.fasta` sequences. This is useful, for example, when the user wants to start from monomeric predictions of each target chain and align them against a multimer template structure. For example, if two unbound structures for chains `A` and `B` are available in PDB format:
 
 ```
-python prepare_templates.py --target examples/H1142/casp15_predictions/unbound_chain_A.pdb examples/H1142/casp15_predictions/unbound_chain_B.pdb --template examples/H1142/H1142.pdb --out_dir examples/ --align
+python prepare_templates.py --target examples/H1142/casp15_predictions/unbound_chain_A.pdb examples/H1142/casp15_predictions/unbound_chain_B.pdb --template examples/H1142/H1142.pdb --out_dir examples/H1142 --align
 ```
 
 The target chains can also come from the same PDB file, in that case it might be necessary to provide the chain mapping flags:
 
 ```
-python prepare_templates.py --target examples/H1142/casp15_predictions/unbound_chains.pdb --template examples/H1142/H1142.pdb --out_dir examples/ --align --target_chains A B --template_chains B C
+python prepare_templates.py --target examples/H1142/casp15_predictions/unbound_chains.pdb --template examples/H1142/H1142.pdb --out_dir examples/H1142 --align --target_chains A B --template_chains B C
 ```
 
 The target/template files are in `.pdb` format by default, but mmCIF is also supported. The `--mmcif_target`/`--mmcif_template` flags are expected in that case.
@@ -91,7 +91,7 @@ The target/template files are in `.pdb` format by default, but mmCIF is also sup
 When a template for an interaction is available that is a remote homolog of the target interaction, it might be useful to superimpose unbound monomers onto the template to create a coarse interaction model. Then, the coarse model made from putting together the unbound monomers will be itself used as template. This can be done with the `--superimpose` flag:
 
 ```
-python prepare_templates.py --target examples/H1142/casp15_predictions/unbound_chain_A.pdb examples/H1142/casp15_predictions/unbound_chain_B.pdb --template examples/H1142/H1142.pdb --out_dir examples/ --align --superimpose
+python prepare_templates.py --target examples/H1142/casp15_predictions/unbound_chain_A.pdb examples/H1142/casp15_predictions/unbound_chain_B.pdb --template examples/H1142/H1142.pdb --out_dir examples/H1142 --align --superimpose
 ```
 
 **Adding further templates**
