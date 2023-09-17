@@ -329,13 +329,17 @@ def superimpose(ref_model, ref_chains, query_models, query_chains):
 
 def main():
     args = parse_args()
+    fasta_target = is_fasta(args.target[0])
+
+    if fasta_target:
+        args.out_dir = f"{args.out_dir}/{Path(args.target[0]).stem}"
 
     # start generating output directory tree
     mmcif_path = Path(args.out_dir, "template_data", "mmcif_files")
     mmcif_path.mkdir(parents=True, exist_ok=True)
     # we always start from a  fake PDB id "0000", unless there are already templates from a previous run that we would like to add to
     next_id = get_next_id(mmcif_path) if args.append else "0000"
-    fasta_target = is_fasta(args.target[0])
+
     args.align = args.align or args.align_tool
 
     if args.align and not args.align_tool:
@@ -409,8 +413,12 @@ def main():
             with open(Path(args.out_dir, f"msas/{msa_chain}", "pdb_hits.sto"), mode="a" if args.append else "w") as pdb_hits:
                 for line in sto_alignment:
                     pdb_hits.write(line)
-        
-    print(f"Run AlphaFold with, e.g.:\npython run_alphafold.py --fasta_paths $INPUT_FASTA --flagfile databases.flag --flagfile {af_flagfile_path} --output_dir {Path(args.out_dir).parents[0]} --cross_chain_templates --dropout --model_preset='multimer_v2'")
+
+    if not fasta_target:
+        print(f"Run AlphaFold with, e.g.:\npython run_alphafold.py --fasta_paths target.fasta --flagfile databases.flag --flagfile {af_flagfile_path} --output_dir {Path(args.out_dir).parents[0]} --cross_chain_templates --dropout --model_preset='multimer_v2' --separate_homomer_msas")
+        print("*** NB: the name of the fasta target should be the same as the name of the folder containing the output msas: (e.g.  if the fasta target file is 'target.fasta', then --output_dir='somedir/target' ***")
+    else:
+        print(f"Run AlphaFold with, e.g.:\npython run_alphafold.py --fasta_paths {args.target[0]} --flagfile databases.flag --flagfile {af_flagfile_path} --output_dir {Path(args.out_dir).parents[0]} --cross_chain_templates --dropout --model_preset='multimer_v2' --separate_homomer_msas")
 
 
 if __name__ == "__main__":
