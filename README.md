@@ -42,7 +42,7 @@ This version of AlphaFold comes with a python script `prepare_templates.py` to s
 
 **Quick start**
 
-If you have a `target.fasta` file containing multiple sequences:
+If you have a `.fasta` file containing multiple sequences:
 
 ```
 >H1137,subunit1|
@@ -54,11 +54,13 @@ MRTLQGSDRFRKGLMGVIVVALIIGVGSTLTSVPMLFAVPTYYGQFADTGGLNIGDKVRIAGMDVGNVKSMEIDGDKVVI
 ...
 ```
 
-And a `template.pdb`/`template.cif` file containing as many template chains as there are target chains in the fasta file, you can run:
+And a `.pdb`/`.cif` file containing as many template chains as there are target chains in the fasta file, you can run e.g.:
 
 ```
 python prepare_templates.py --target examples/H1137/H1137.fasta --template examples/H1137/H1137.pdb --out_dir examples/ --align
 ```
+
+When using a `.fasta` target, the outputs will be saved in a subfolder inside `out_dir` with the same name as the fasta file. In this case, the outputs will be stored inside `examples/H1137` because the fasta filename is `H1137.fasta`.
 
 **Chain mapping flags**
 
