@@ -46,11 +46,11 @@ If you have a `.fasta` file containing multiple sequences:
 
 ```
 >H1137,subunit1|
-MTEPPAPTAPLNKPKTPPYKLAGLILGLVGVLVLALTWMQFRGQFEDKVQLTVLSGRAGLSMDPGSKVTFNGVPIGRLASIDVVEVDDNPEARLTLDVDPKY...
+MTEPPAPTAPLNKPKTPPYKLAGLILGLVGVLVLALTWMQFRGQFEDKVQLTVLSGRAG...
 >H1137,subunit2|
-MSIKGTLFKLGIFSLVLLTFTALIFVVFGQIRFNRTTEYSAIFKNVSGLRDGQFVRAAGVEVGKVKSVDLINGGEQAEVKFTVERSLPLFQETTAAIRYQDL...
+MSIKGTLFKLGIFSLVLLTFTALIFVVFGQIRFNRTTEYSAIFKNVSGLRDGQFVRAAG...
 >H1137,subunit3|
-MRTLQGSDRFRKGLMGVIVVALIIGVGSTLTSVPMLFAVPTYYGQFADTGGLNIGDKVRIAGMDVGNVKSMEIDGDKVVIGYTLGGRTIGTESRAAIRTDTI...
+MRTLQGSDRFRKGLMGVIVVALIIGVGSTLTSVPMLFAVPTYYGQFADTGGLNIGDKVR...
 ...
 ```
 
@@ -134,10 +134,10 @@ python prepare_templates.py --target examples/H1137/H1137.fasta --template examp
 
 ## Outputs
 
-Having run `prepare_templates.py` four times (one per template), the output directory `./test` will look as follows:
+Having run `prepare_templates.py` four times (one per template), the output directory `AF_models/` will look as follows:
 
 ```bash
-examples/H1137/
+AF_models/H1137/
 ├── H1137.fasta  # target fasta file
 ├── H1137.pdb    # template pdb file
 ├── msas
