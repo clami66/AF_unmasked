@@ -2,6 +2,7 @@ name: AF_unmasked
 channels:
   - conda-forge
   - bioconda
+  - nvidia
 dependencies:
   - aria2
   - openmm=7.5.1
@@ -11,3 +12,4 @@ dependencies:
   - kalign3=3.2.2
   - hhsuite=3.3.0
   - hmmer=3.3.2
+  - cuda-nvcc
