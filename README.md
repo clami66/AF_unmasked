@@ -164,7 +164,7 @@ The `template_data/templates.flag` file is a flagfile that should be passed to A
 
 ## Running AlphaFold
 
-![morphing of inpainted models with experimental data](fig/nf1_morphing_inpainted_structures.png)
+![morphing of inpainted models with experimental data](fig/nf1_morphing_inpainted_structures.gif)
 
 Once templates have been prepared, invoke AlphaFold with the generated flagfile (inside the `template_data` folder) along with the standard flagfile (`databases.flag` in this repository).
 
