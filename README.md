@@ -164,6 +164,8 @@ The `template_data/templates.flag` file is a flagfile that should be passed to A
 
 ## Running AlphaFold
 
+![morphing of inpainted models with experimental data](fig/nf1_morphing_inpainted_structures.png)
+
 Once templates have been prepared, invoke AlphaFold with the generated flagfile (inside the `template_data` folder) along with the standard flagfile (`databases.flag` in this repository).
 
 Use the `--cross_chain_templates` or `--cross_chain_templates_only` flags if you want to use both intra- and inter-chain constraints from the template, or inter-chain constraints alone:
