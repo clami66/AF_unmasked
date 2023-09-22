@@ -12,7 +12,6 @@ The installation and setup procedure is the same as for the regular version of A
 
 ```bash
 conda create -n AF_unmasked -c conda-forge python=3.9 mamba
-conda activate AF_unmasked
 
 # clone this repository
 git clone https://github.com/clami66/AF_unmasked.git
@@ -20,6 +19,7 @@ cd AF_unmasked/
 
 # install requirements
 mamba env update --file environment.yaml
+conda activate AF_unmasked
 python -m pip install -r requirements.txt
 ```
 
