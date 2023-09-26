@@ -11,8 +11,6 @@ The installation and setup procedure is the same as for the regular version of A
 2. Set up conda environment, install dependencies:
 
 ```bash
-conda create -n AF_unmasked -c conda-forge python=3.9 mamba
-
 # clone this repository
 git clone https://github.com/clami66/AF_unmasked.git
 cd AF_unmasked/
