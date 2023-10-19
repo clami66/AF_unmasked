@@ -1,0 +1,31 @@
+# STOCKHOLM 1.0
+
+#=GS MGYP001014147663/5-409   DE [subseq from] PL=01 UP=0 BIOMES=1000000000000
+#=GS MGYP000185612448/16-368  DE [subseq from] PL=00 UP=1 BIOMES=0000000010100
+T1137s1_0                        MTEPPAPTAPLNKP----KTP-P-Y--K--LAG-L--I--L--GL-VG--V--L----V----L----A---L----T----W----M---Q---F---R---G----Q--F-----E--D-KV-----Q----L-T-V-L--SG--RA--GL--SMDPGSKVTFNGV-P-IGRL-A-SI-D-V-V--E-----V-----
+MGYP001014147663/5-409           ----TAPHAPLNRP----KTP-P-Y--K--LAG-L--V--L--AL-IA--A--L----V----F----G---L----T----W----L---Q---F---R---G----V--F-----E--P-KT-----E----L-T-V-M--SG--RA--GL--SMDPGSKVTYNGV-P-IGRL-K-SV-D-V-V--T-----V-----
+MGYP000185612448/16-368          -------------------------------------------VV-LF--A--G----A----I----I---L----T----W----A---L---F---T---G----S--L-----K--S-TV-----P----V-T-L-T--SD--RA--GL--VMETNAKVKLRGV-Q-VGRV-S-NI-A-V-T--G-----------
+#=GC RF                          xxxxxxxxxxxxxx....xxx.x.x..x..xxx.x..x..x..xx.xx..x..x....x....x....x...x....x....x....x...x...x...x...x....x..x.....x..x.xx.....x....x.x.x.x..xx..xx..xx..xxxxxxxxxxxxx.x.xxxx.x.xx.x.x.x..x.....x.....
+
+T1137s1_0                        ---D-D-N--P-E--A-R--L----T-L-DVD---PKYLD----LIPENANVELRATTVFGNKYI--S--F-L-S----P----K--N----P--S-----A---E---R--L---------S----A--S----T-----P------I---R---A-----Q----G----------V---T---T------E--FN--
+MGYP001014147663/5-409           ---G-D-N--P-E--A-K--L----T-L-DVD---PKYLR----LIPENVDVELRATTVFGNKYI--Y--F-A-S----P----K--D----P--S-----P---A---R--V---------S----E--S----T-----P------I---Q---A-----K----G----------V---T---T------E--FN--
+MGYP000185612448/16-368          ---Q-Q-E--P-T--V-A--L----Q-L-EID---PDQLQ----YIPANVQAQIRATTIFGAKFV--D--L-V-F----P----D--D----P--S-----S---Q---R--L---------E----A--G----Q-----V------L---V---S-----R----N----------V---T---T------E--VN--
+#=GC RF                          ...x.x.x..x.x..x.x..x....x.x.xxx...xxxxx....xxxxxxxxxxxxxxxxxxxxx..x..x.x.x....x....x..x....x..x.....x...x...x..x.........x....x..x....x.....x......x...x...x.....x....x..........x...x...x......x..xx..
+
+T1137s1_0                        T------L---F----ET----ITAIS---E---QVDP---I--K----L-----N--E-T--LT---A--AA-Q-ALDG-LGDKFG-RSI---V---D-G----NA-IL-AD-----V----N--P--R-------M-PQ-I--R--RD---I-T-G----L-A-N-L---G---E-V---YAD---AS------PDLF
+MGYP001014147663/5-409           T------L---F----ET----ITKIS---E---QVDP---I--K----L-----N--E-T--LT---A--TA-Q-ALDG-LGDKFG-QSV---V---N-G----NT-IL-AD-----L----N--P--R-------M-PQ-I--R--RD---T-R-G----L-A-D-L---S---E-V---YAD---AS------PDLW
+MGYP000185612448/16-368          T------V---F----QN----LVEVL---D---QVDA---A--K----L-----N--S-T--LS---A--LA-D-GVRG-QGERIG-QAT---T---D-A----NQ-VL-LA-----L----N--P--R-------N-ET-I--T--AD---L-R-A----L-D-D-F---N---Q-T---FSA---AA------QDIL
+#=GC RF                          x......x...x....xx....xxxxx...x...xxxx...x..x....x.....x..x.x..xx...x..xx.x.xxxx.xxxxxx.xxx...x...x.x....xx.xx.xx.....x....x..x..x.......x.xx.x..x..xx...x.x.x....x.x.x.x...x...x.x...xxx...xx......xxxx
+
+T1137s1_0                        DG-LDNA-V-TT-ART-LNE--QR---GNLDQAL--VAA--VG--F--G-N--TG-----G--D-I---F-E-R---G---G--P-----YL---VR---G-AQDLL-------P-T--S-ALL-DE--YS--PALFC----T----I---R--N---Y--H---D---A---A----P--K--L-A---G--A---L--
+MGYP001014147663/5-409           DG-LTNA-V-TT-ART-LND--QR---GNIDQAL--MAA--VG--F--G-N--TG-----G--D-I---F-E-R---G---G--P-----YL---VR---G-AQDLL-------P-T--S-ALL-DK--HS--PALFC----T----I---R--N---F--H---D---A---A----P--K--L-A---D--A---L--
+MGYP000185612448/16-368          AT-LDAA-S-TT-STT-VVT--QS---KELDALL--LST--IG--L--S-N--SG-----I--N-L---L-A-P---S---Q--A-----NL---IK---A-VNVLA-------P-T--T-QLL-LK--YN--PEYTC----L----L---L--G---A--K---H---L---L----D-NG--G-Y---E--S---P--
+#=GC RF                          xx.xxxx.x.xx.xxx.xxx..xx...xxxxxxx..xxx..xx..x..x.x..xx.....x..x.x...x.x.x...x...x..x.....xx...xx...x.xxxxx.......x.x..x.xxx.xx..xx..xxxxx....x....x...x..x...x..x...x...x...x....x..x..x.x...x..x...x..
+
+T1137s1_0                        -----G-------G----N--G-Y---S--L-L-T--N--S-L--V---V-G--V--G--N-P---Y-VY-P-DN-LPR-----VN-A-K-GGPE--GR---P-GC----W--Q---P-IT-R---DLW-P-F--P-YL-VMDT----G--A-S--IA--PY--NH--F--ELGQPMFAEYVWGRQVGENTINP
+MGYP001014147663/5-409           -----G-------G----N--G-Y---S--L-L-T--H--S-L--V---V-G--V--G--N-A---Y-KY-P-DN-LPR-----VN-A-K-GGPE--GR---P-GC----W--Q---P-IT-R---DLW-P-M--P-YL-VMDT----G--V-S--LA--PY--NH--F--ELGHPIMAEYVWGRQVGAPTINP
+MGYP000185612448/16-368          -----G-------G----N--G-R---S--L-V-L--D--A-G--L---A-F--G--D--D-P---Y-KY-P-QH-LPI-----IG-A-K-GGPG--GK---P-GC----G--S--LP-DV-S---KNW-P-V--R-NL-VTNT----G--F------------------------------------------
+#=GC RF                          .....x.......x....x..x.x...x..x.x.x..x..x.x..x...x.x..x..x..x.x...x.xx.x.xx.xxx.....xx.x.x.xxxx..xx...x.xx....x..x...x.xx.x...xxx.x.x..x.xx.xxxx....x..x.x..xx..xx..xx..x..xxxxxxxxxxxxxxxxxxxxxxx
+
+//
+
