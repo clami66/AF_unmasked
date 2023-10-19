@@ -182,6 +182,8 @@ python run_alphafold.py --fasta_paths examples/H1137/H1137.fasta \
 ```
 **NB: the --output_dir flag should be passed the same directory as when running prepare_templates.py**. So that AlphaFold uses the correct `pdb_hits.sto` files when parsing the template data.
 
+**NB: the alignment step for H1137 can take a long time, precomputed alignments are available in `examples/H1137/msas/`. These can be copied to `AF_models/H1137/msas/` to speed up computation**
+
 ## Predicting homomers
 
 whenever running with homomers, or multimers containing multiple copies of any given chain, make sure to add the `--separate_homomer_msas` flag, in order to force AlphaFold to read the correct `pdb_hits.sto` template alignment:
