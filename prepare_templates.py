@@ -338,7 +338,7 @@ def get_target_data(paths, chains=None, is_fasta=False, is_mmcif=False):
                 get_fastaseq(target_models[0], chain) for chain in target_chains
             ]
             # replicate the same model as many times as there are chains, so that all lists can be zipped later
-            target_models = [target_models[0] for i in range(len(target_chains))]
+            target_models = [pickle.loads(pickle.dumps(target_models[0], -1)) for i in range(len(target_chains))]
     else:  # fasta file containing one sequence per chain
         target_sequences = [record.seq for record in SeqIO.parse(paths[0], "fasta")]
         target_models = [None for s in target_sequences]
@@ -489,6 +489,7 @@ def main():
         )
         template_model = target_model
         template_sequences = target_sequences
+        template_chains = target_chains
         io.set_structure(template_model)
         io.save(template_mmcif_path)
         fix_mmcif(
