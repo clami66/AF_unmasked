@@ -339,7 +339,7 @@ def get_target_data(paths, chains=None, is_fasta=False, is_mmcif=False):
                 get_fastaseq(target_models[0], chain) for chain in target_chains
             ]
             # replicate the same model as many times as there are chains, so that all lists can be zipped later
-            target_models = [target_models[0] for i in range(len(target_chains))]
+            target_models = [pickle.loads(pickle.dumps(target_models[0], -1)) for i in range(len(target_chains))]
     else:  # fasta file containing one sequence per chain
         target_sequences = [record.seq for record in SeqIO.parse(paths[0], "fasta")]
         target_models = [None for s in target_sequences]
@@ -371,7 +371,7 @@ def get_next_id(path):
     return str(next_cif_id).zfill(4)
 
 
-def superimpose(ref_model, ref_chains, query_models, query_chains):
+def superimpose(ref_model, ref_chains, query_models, query_chains, alignment_type="tmalign"):
     backbone_atoms = ["CA", "C", "N", "O"]
     superimposer = Superimposer()
     for i, (ref_chain, query_chain) in enumerate(zip(ref_chains, query_chains)):
@@ -388,7 +388,7 @@ def superimpose(ref_model, ref_chains, query_models, query_chains):
             ref_model[ref_chain],
             "_",
             query_model[query_chain],
-            alignment_type="tmalign",
+            alignment_type=alignment_type,
         )
 
         for ref_letter, query_letter in zip(alignment[0], alignment[1]):
@@ -486,10 +486,11 @@ def main():
     else:
         # superimpose target chains to template, then save those as template mmcif, and realign to itself
         target_model = superimpose(
-            template_model, template_chains, target_models, target_chains
+            template_model, template_chains, target_models, target_chains, alignment_type=args.align_tool
         )
         template_model = target_model
         template_sequences = target_sequences
+        template_chains = target_chains
         io.set_structure(template_model)
         io.save(template_mmcif_path)
         fix_mmcif(
@@ -563,10 +564,15 @@ def main():
             sto_alignment = format_alignment_stockholm(
                 alignment, hit_id=next_id, hit_chain=template_chain
             )
+            
+            if len(target_chains) > 1: # this is usually the case, but if monomer we change the msa outpath
+                msa_path = f"msas/{msa_chain}"
+            else:
+                msa_path = "msas/"
             # write alignment to file
-            Path(args.out_dir, f"msas/{msa_chain}").mkdir(parents=True, exist_ok=True)
+            Path(args.out_dir, msa_path).mkdir(parents=True, exist_ok=True)
             with open(
-                Path(args.out_dir, f"msas/{msa_chain}", "pdb_hits.sto"),
+                Path(args.out_dir, msa_path, "pdb_hits.sto"),
                 mode="a" if args.append else "w",
             ) as pdb_hits:
                 for line in sto_alignment:
