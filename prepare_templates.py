@@ -563,10 +563,15 @@ def main():
             sto_alignment = format_alignment_stockholm(
                 alignment, hit_id=next_id, hit_chain=template_chain
             )
+            
+            if len(target_chains) > 1: # this is usually the case, but if monomer we change the msa outpath
+                msa_path = f"msas/{msa_chain}"
+            else:
+                msa_path = "msas/"
             # write alignment to file
-            Path(args.out_dir, f"msas/{msa_chain}").mkdir(parents=True, exist_ok=True)
+            Path(args.out_dir, msa_path).mkdir(parents=True, exist_ok=True)
             with open(
-                Path(args.out_dir, f"msas/{msa_chain}", "pdb_hits.sto"),
+                Path(args.out_dir, msa_path, "pdb_hits.sto"),
                 mode="a" if args.append else "w",
             ) as pdb_hits:
                 for line in sto_alignment:
