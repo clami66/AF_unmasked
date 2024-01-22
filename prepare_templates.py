@@ -214,8 +214,9 @@ def fix_mmcif(path, chains, sequences, revision_date):
             "\n".join(
                 [
                     f"{c+1 : <2} {r+1 : <4} {seq3(res).upper()} n"
-                    for r, res in enumerate(sequences[c])
                     if seq3(res).upper() != "XAA"
+                    else f"{c+1 : <2} {r+1 : <4} UNK n"
+                    for r, res in enumerate(sequences[c])
                 ]
             )
             + "\n",
@@ -249,7 +250,7 @@ def fix_mmcif(path, chains, sequences, revision_date):
         "\n".join(
             [
                 f"{restype.upper()} peptide ? ? ? . "
-                for restype in IUPACData.protein_letters_3to1.keys()
+                for restype in list(IUPACData.protein_letters_3to1.keys()) + ["Unk"]
             ]
         )
         + "\n#\n",
