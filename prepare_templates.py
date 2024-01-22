@@ -370,7 +370,7 @@ def get_next_id(path):
     return str(next_cif_id).zfill(4)
 
 
-def superimpose(ref_model, ref_chains, query_models, query_chains):
+def superimpose(ref_model, ref_chains, query_models, query_chains, alignment_type="tmalign"):
     backbone_atoms = ["CA", "C", "N", "O"]
     superimposer = Superimposer()
     for i, (ref_chain, query_chain) in enumerate(zip(ref_chains, query_chains)):
@@ -387,7 +387,7 @@ def superimpose(ref_model, ref_chains, query_models, query_chains):
             ref_model[ref_chain],
             "_",
             query_model[query_chain],
-            alignment_type="tmalign",
+            alignment_type=alignment_type,
         )
 
         for ref_letter, query_letter in zip(alignment[0], alignment[1]):
@@ -485,7 +485,7 @@ def main():
     else:
         # superimpose target chains to template, then save those as template mmcif, and realign to itself
         target_model = superimpose(
-            template_model, template_chains, target_models, target_chains
+            template_model, template_chains, target_models, target_chains, alignment_type=args.align_tool
         )
         template_model = target_model
         template_sequences = target_sequences
