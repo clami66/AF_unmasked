@@ -279,7 +279,8 @@ class DataPipeline:
     all_chain_features = add_assembly_features(all_chain_features)
 
     np_example = feature_processing.pair_and_merge(
-        all_chain_features=all_chain_features)
+        all_chain_features=all_chain_features,
+        pair_homomers=is_homomer_or_monomer)
 
     # Pad MSA to avoid zero-sized extra_msa.
     np_example = pad_msa(np_example, 512)
