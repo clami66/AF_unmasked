@@ -233,10 +233,9 @@ def fix_mmcif(path, chains, sequences, revision_date):
     # _struct_asym.pdbx_blank_PDB_chainid_flag
     # A 1 N
     # B 2 N
-    ascii_AA = list(ascii_uppercase) + ["A" + c for c in ascii_uppercase]
     pdb_data.insert(
         2,
-        "\n".join([f"{ascii_AA[c]} {c+1} N" for c, chain in enumerate(chains)])
+        "\n".join([f"{chain} {c+1} N" for c, chain in enumerate(chains)])
         + "\n#\n",
     )
     pdb_data.insert(
@@ -264,6 +263,9 @@ def fix_mmcif(path, chains, sequences, revision_date):
     pdb_data.insert(2, f"{revision_date}\n")
     pdb_data.insert(2, "_entry.id   pdb\n_pdbx_audit_revision_history.revision_date\n")
 
+    for i, line in enumerate(pdb_data):
+        if line.startswith("ATOM") and line[23] != line[72]:
+            pdb_data[i] = line[:23] + line[72] + line[24:]
     with open(path, "w") as out:
         out.write("".join(pdb_data))
 
