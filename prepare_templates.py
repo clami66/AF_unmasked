@@ -567,10 +567,9 @@ def main():
                 alignment, hit_id=next_id, hit_chain=template_chain
             )
             
-            if len(target_chains) > 1: # this is usually the case, but if monomer we change the msa outpath
-                msa_path = f"msas/{msa_chain}"
-            else:
-                msa_path = "msas/"
+            
+            msa_path = f"msas/{msa_chain}"
+            
             # write alignment to file
             Path(args.out_dir, msa_path).mkdir(parents=True, exist_ok=True)
             with open(
