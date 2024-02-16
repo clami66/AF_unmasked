@@ -263,9 +263,22 @@ def fix_mmcif(path, chains, sequences, revision_date):
     pdb_data.insert(2, f"{revision_date}\n")
     pdb_data.insert(2, "_entry.id   pdb\n_pdbx_audit_revision_history.revision_date\n")
 
+    asym_id_col = -1
+    auth_id_col = -1
+    atom_col_counter = 0
     for i, line in enumerate(pdb_data):
-        if line.startswith("ATOM") and line[23] != line[72]:
-            pdb_data[i] = line[:23] + line[72] + line[24:]
+        if line.startswith("_atom_site"):
+            if "label_asym_id" in line:
+                asym_id_col = atom_col_counter
+            elif "auth_asym_id" in line:
+                auth_id_col = atom_col_counter
+            atom_col_counter += 1
+
+        if line.startswith("ATOM") and asym_id_col != auth_id_col:
+            split_line = line.split(" ")
+            column_indexes = [count for element, count in zip(split_line, range(len(split_line))) if element]
+            split_line[column_indexes[asym_id_col]] = split_line[column_indexes[auth_id_col]]
+            pdb_data[i] = " ".join(split_line)
     with open(path, "w") as out:
         out.write("".join(pdb_data))
 
