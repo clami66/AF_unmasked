@@ -8,11 +8,13 @@ import subprocess
 from pathlib import Path
 from string import ascii_uppercase, ascii_lowercase
 from argparse import ArgumentParser
+import numpy as np
 from Bio import Align, SeqIO
 from Bio.Data import IUPACData
 from Bio.SeqUtils import seq1, seq3
 from Bio.PDB.PDBIO import PDBIO
 from Bio.PDB.mmcifio import MMCIFIO
+from Bio.PDB.kdtrees import KDTree
 from Bio.PDB import MMCIFParser, PDBParser, Superimposer
 
 ascii_upperlower = ascii_uppercase + ascii_lowercase
@@ -85,6 +87,12 @@ def parse_args():
         help="Superimpose target chains to template and use the superposition as template structure instead",
     )
     parser.add_argument(
+        "--inpaint_clashes",
+        default=False,
+        action="store_true",
+        help="If clashing residues between chains should be deleted from the template, this will let AF inpaint them during the modelling stage",
+    )
+    parser.add_argument(
         "--target_chains",
         metavar="target_chain",
         type=str,
@@ -147,6 +155,38 @@ def remove_hetatms(model):
     for _, _, chain, res in residues_to_delete:
         model[chain].detach_child(res)
 
+
+def detect_and_remove_clashes(model, clash_threshold=3.5):
+
+    # Extract CA atoms from the structure
+    ca_atoms = []
+    ca_data = []
+    for chain in model:
+        for residue in chain:
+            if residue.has_id('CA'):
+                coords = residue['CA'].get_coord()
+                ca_atoms.append(coords)
+                ca_data.append((chain, int(residue.id[1])))
+
+    cb_tree = KDTree(np.array(ca_atoms, dtype="d"))
+    # Check for clashes and delete clashing residues
+    to_delete = set()
+    for i, coord in enumerate(ca_atoms):
+        clashing_indices = cb_tree.search(np.array(coord, dtype="d"), clash_threshold)
+        for j in clashing_indices:
+            if ca_data[i][1] != ca_data[j.index][1]:
+                to_delete.add(ca_data[i])
+                to_delete.add(ca_data[j.index])
+
+
+    for chain in model:
+        for i in to_delete:
+            if i[0] == chain:
+                try:
+                    chain.detach_child((' ', i[1], ' '))
+                except KeyError:
+                    pass
+    return model
 
 def get_fastaseq(model, chain):
     return "".join(seq1(aa.get_resname()) for aa in model[chain].get_residues())
@@ -283,13 +323,14 @@ def fix_mmcif(path, chains, sequences, revision_date):
         out.write("".join(pdb_data))
 
 
-def do_align(ref_seq, ref_model, query_seq, query_model, alignment_type="sequence"):
+def do_align(ref_seq, ref_model, query_seq, query_model, alignment_type="blast"):
     alignment = []
+    print("DO ALIGN", alignment_type)
     if alignment_type == "blast":  # ref and query are sequences rather than structures
         aligner = Align.PairwiseAligner()
         aligner.substitution_matrix = Align.substitution_matrices.load("BLOSUM62")
-        aligner.open_gap_score = -10
-        aligner.extend_gap_score = -0.5
+        #aligner.open_gap_score = -10
+        #aligner.extend_gap_score = -0.5
         aln = aligner.align(ref_seq, query_seq)[0]
         try:  # compatibility between versions of Biopython
             alignment.append(aln[0])
@@ -297,6 +338,7 @@ def do_align(ref_seq, ref_model, query_seq, query_model, alignment_type="sequenc
         except:
             alignment.append(aln.format().split("\n")[0])
             alignment.append(aln.format().split("\n")[2])
+        print("\n".join(alignment))
     else:  # work with structural alignments instead
         ref_tempfile = tempfile.NamedTemporaryFile()
         query_tempfile = tempfile.NamedTemporaryFile()
@@ -392,6 +434,7 @@ def superimpose(ref_model, ref_chains, query_models, query_chains, alignment_typ
     for i, (ref_chain, query_chain) in enumerate(zip(ref_chains, query_chains)):
         query_atoms = []
         ref_atoms = []
+        residues_to_delete = []
         ref_residues = ref_model[ref_chain].get_residues()
 
         # query models is a list of one model per chain every time, so we access the ith model and extract the ith chain
@@ -414,12 +457,19 @@ def superimpose(ref_model, ref_chains, query_models, query_chains, alignment_typ
             if query_letter != "-":
                 query_aa = next(query_residues)
             if ref_aa and query_aa:
+                ref_ids = [atom.id for atom in ref_aa.get_atoms()]
+                query_ids = [atom.id for atom in query_aa.get_atoms()]
                 ref_atoms += [
-                    atom for atom in ref_aa.get_atoms() if atom.id in backbone_atoms
+                    atom for atom in ref_aa.get_atoms() if atom.id in backbone_atoms and atom.id in query_ids
                 ]
                 query_atoms += [
-                    atom for atom in query_aa.get_atoms() if atom.id in backbone_atoms
+                    atom for atom in query_aa.get_atoms() if atom.id in backbone_atoms and atom.id in ref_ids
                 ]
+            elif query_aa:
+                residues_to_delete.append(query_aa.get_full_id())
+    
+        #for _, _, chain, res in residues_to_delete:
+        #    query_model[query_chain].detach_child(res)
 
         # superimpose queries, chain by chain
         superimposer.set_atoms(ref_atoms, query_atoms)
@@ -492,13 +542,7 @@ def main():
         args.out_dir, "template_data", "mmcif_files", f"{next_id}.cif"
     )
 
-    if not args.superimpose:  # use template as is
-        io.set_structure(template_model)
-        io.save(template_mmcif_path)
-        fix_mmcif(
-            template_mmcif_path, template_chains, template_sequences, args.revision_date
-        )
-    else:
+    if args.superimpose:  # modify template
         # superimpose target chains to template, then save those as template mmcif, and realign to itself
         target_model = superimpose(
             template_model, template_chains, target_models, target_chains, alignment_type=args.align_tool
@@ -506,11 +550,19 @@ def main():
         template_model = target_model
         template_sequences = target_sequences
         template_chains = target_chains
-        io.set_structure(template_model)
-        io.save(template_mmcif_path)
-        fix_mmcif(
-            template_mmcif_path, template_chains, template_sequences, args.revision_date
-        )
+
+    if args.inpaint_clashes:
+        template_model = detect_and_remove_clashes(template_model)
+        template_sequences = [
+            get_fastaseq(template_model, chain) for chain in template_chains
+        ]
+
+    io.set_structure(template_model)
+    io.save(template_mmcif_path)
+
+    fix_mmcif(
+        template_mmcif_path, template_chains, template_sequences, args.revision_date
+    )
 
     pdb_seqres_path = Path(args.out_dir, "template_data", "pdb_seqres.txt").resolve()
     write_seqres(
