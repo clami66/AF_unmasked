@@ -122,8 +122,12 @@ class Hmmsearch(object):
                         output_string: str,
                         input_sequence: str) -> Sequence[parsers.TemplateHit]:
     """Gets parsed template hits from the raw string output by the tool."""
-    a3m_string = parsers.convert_stockholm_to_a3m(output_string,
+    if ">" not in output_string:
+      a3m_string = parsers.convert_stockholm_to_a3m(output_string,
                                                   remove_first_row_gaps=False)
+    else:
+      a3m_string = output_string
+
     template_hits = parsers.parse_hmmsearch_a3m(
         query_sequence=input_sequence,
         a3m_string=a3m_string,
