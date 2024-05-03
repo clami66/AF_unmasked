@@ -155,6 +155,7 @@ flags.DEFINE_boolean('cross_chain_templates', False, 'Whether to include cross-c
 flags.DEFINE_boolean('cross_chain_templates_only', False, 'Whether to include cross-chain distances in multimer templates')
 flags.DEFINE_boolean('separate_homomer_msas', False, 'Whether to force separate processing of homomer MSAs')
 flags.DEFINE_list('models_to_use',None, 'specify which models in model_preset that should be run')
+flags.DEFINE_list('msa_mask', None, 'Ranges of residues where the MSA should be used. MSA columsn for all other residues will be masked out (e.g. "1:100 150:200")')
 
 FLAGS = flags.FLAGS
 
@@ -212,7 +213,14 @@ def predict_structure(
       msa_output_dir=msa_output_dir)
   timings['features'] = time.time() - t_0
 
-  # Write out features as a pickled dictionary.
+  if "msa" in feature_dict and FLAGS.msa_mask:
+    mask = np.ones_like(feature_dict["msa"][0])
+    for aa_range in FLAGS.msa_mask:
+      start, finish = (int(n) - 1 for n in aa_range.split(":"))
+      mask[start:finish] = 0
+    # keep first row in MSA
+    feature_dict["msa"][1:, np.where(mask)[0]] = residue_constants.HHBLITS_AA_TO_ID["-"]
+
   features_output_path = os.path.join(output_dir, 'features.pkl')
   with open(features_output_path, 'wb') as f:
     pickle.dump(feature_dict, f, protocol=4)
