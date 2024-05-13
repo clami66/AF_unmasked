@@ -18,7 +18,12 @@ cd AF_unmasked/
 # install requirements
 # NB: **better if you can use mamba instead of conda (mamba env create...)**
 conda env create --file=environment.yaml
+
+# NB: **on M1/M2 Macbooks, this should be:
+# CONDA_SUBDIR=osx-64 conda env create --file=environment.yaml
+
 conda activate AF_unmasked
+
 python -m pip install -r requirements.txt
 ```
 
