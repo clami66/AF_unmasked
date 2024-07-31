@@ -70,11 +70,6 @@ class Jackhmmer:
     self.binary_path = binary_path
     self.database_path = database_path
     self.num_streamed_chunks = num_streamed_chunks
-"""
-    if not os.path.exists(self.database_path) and num_streamed_chunks is None:
-      logging.error('Could not find Jackhmmer database %s', database_path)
-      raise ValueError(f'Could not find Jackhmmer database {database_path}')
-"""
     self.n_cpu = n_cpu
     self.n_iter = n_iter
     self.e_value = e_value
