@@ -77,11 +77,12 @@ class HHBlits:
     self.binary_path = binary_path
     self.databases = databases
 
+"""
     for database_path in self.databases:
       if not glob.glob(database_path + '_*'):
         logging.error('Could not find HHBlits database %s', database_path)
         raise ValueError(f'Could not find HHBlits database {database_path}')
-
+"""
     self.n_cpu = n_cpu
     self.n_iter = n_iter
     self.e_value = e_value
