@@ -154,6 +154,8 @@ flags.DEFINE_boolean('dropout', False, 'Turn on drop out during inference to get
 flags.DEFINE_boolean('cross_chain_templates', False, 'Whether to include cross-chain distances in multimer templates')
 flags.DEFINE_boolean('cross_chain_templates_only', False, 'Whether to include cross-chain distances in multimer templates')
 flags.DEFINE_boolean('separate_homomer_msas', False, 'Whether to force separate processing of homomer MSAs')
+flags.DEFINE_boolean('no_uniref', False, 'Do not run/use Uniref90 alignments')
+flags.DEFINE_boolean('no_mgnify', False, 'Do not run/use mgnify alignments')
 flags.DEFINE_list('models_to_use',None, 'specify which models in model_preset that should be run')
 flags.DEFINE_list('msa_mask', None, 'Ranges of residues where the MSA should be used. MSA columsn for all other residues will be masked out (e.g. "1:100 150:200")')
 
@@ -419,7 +421,9 @@ def main(argv):
       use_precomputed_msas=FLAGS.use_precomputed_msas,
       mgnify_max_hits=FLAGS.mgnify_max_hits,
       uniref_max_hits=FLAGS.uniref_max_hits,
-      bfd_max_hits=FLAGS.bfd_max_hits)
+      bfd_max_hits=FLAGS.bfd_max_hits,
+      no_uniref=FLAGS.no_uniref,
+      no_mgnify=FLAGS.no_mgnify)
 
   if run_multimer_system:
     num_predictions_per_model = FLAGS.num_multimer_predictions_per_model
