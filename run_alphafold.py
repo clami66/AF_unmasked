@@ -213,14 +213,6 @@ def predict_structure(
       msa_output_dir=msa_output_dir)
   timings['features'] = time.time() - t_0
 
-  if "msa" in feature_dict and FLAGS.msa_mask:
-    mask = np.ones_like(feature_dict["msa"][0])
-    for aa_range in FLAGS.msa_mask:
-      start, finish = (int(n) - 1 for n in aa_range.split(":"))
-      mask[start:finish] = 0
-    # keep first row in MSA
-    feature_dict["msa"][1:, np.where(mask)[0]] = residue_constants.HHBLITS_AA_TO_ID["-"]
-
   features_output_path = os.path.join(output_dir, 'features.pkl')
   with open(features_output_path, 'wb') as f:
     pickle.dump(feature_dict, f, protocol=4)
