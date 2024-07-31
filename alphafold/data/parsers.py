@@ -337,6 +337,20 @@ def remove_empty_columns_from_stockholm_msa(stockholm_msa: str) -> str:
   return '\n'.join((processed_lines[i] for i in range(len(processed_lines))))
 
 
+def remove_empty_columns_from_a3m_msa(a3m_msa: str) -> str:
+  """Removes empty columns (lowercase letters) from a a3m MSA."""
+  remove_insertions = str.maketrans('', '', string.ascii_lowercase)
+  processed_msa = a3m_msa.translate(remove_insertions)
+  """
+  for i, line in enumerate(stockholm_msa.splitlines()):
+    if line.startswith('>'):
+      processed_lines.append(line)
+    else:
+      processed_lines.append(
+  return '\n'.join((processed_lines[i] for i in range(len(processed_lines))))
+  """
+  return processed_msa
+
 def deduplicate_stockholm_msa(stockholm_msa: str) -> str:
   """Remove duplicate sequences (ignoring insertions wrt query)."""
   sequence_dict = collections.defaultdict(str)
@@ -370,6 +384,24 @@ def deduplicate_stockholm_msa(stockholm_msa: str) -> str:
       filtered_lines.append(line)
 
   return '\n'.join(filtered_lines) + '\n'
+
+
+def deduplicate_a3m_msa(a3m_msa: str) -> str:
+  """Remove duplicate sequences."""
+  deduped_a3m = ""
+  seen_sequences = set()
+
+  # First we must extract all sequences from the MSA.
+  for count, line in enumerate(a3m_msa.splitlines()):
+    # Only consider the alignments - ignore headers
+    if line.strip() and not line.startswith(">"):
+      alignment = line.strip()
+      if alignment not in seen_sequences:
+        deduped_a3m += f">{count}\n"
+        deduped_a3m += alignment + "\n"
+        seen_sequences.add(alignment)
+
+  return deduped_a3m + "\n"
 
 
 def _get_hhr_line_regex_groups(
