@@ -325,7 +325,6 @@ def fix_mmcif(path, chains, sequences, revision_date):
 
 def do_align(ref_seq, ref_model, query_seq, query_model, alignment_type="blast"):
     alignment = []
-    print("DO ALIGN", alignment_type)
     if alignment_type == "blast":  # ref and query are sequences rather than structures
         aligner = Align.PairwiseAligner()
         aligner.substitution_matrix = Align.substitution_matrices.load("BLOSUM62")
@@ -519,7 +518,7 @@ def main():
     # load target data if needed
     if args.align or args.superimpose:
         target_chains, target_sequences, target_models = get_target_data(
-            args.target, 
+            args.target,
             chains=args.target_chains,
             is_fasta=fasta_target,
             is_mmcif=args.mmcif_target,
