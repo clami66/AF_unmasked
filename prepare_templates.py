@@ -380,9 +380,9 @@ def do_align(ref_seq, ref_model, query_seq, query_model, alignment_type="blast")
     return alignment
 
 
-def get_target_data(paths, chains=None, is_fasta=False, is_mmcif=False):
+def get_target_data(paths, chains=None, is_fasta=False):
     if not is_fasta:
-        target_models = [load_PDB(target, is_mmcif=is_mmcif) for target in paths]
+        target_models = [load_PDB(target) for target in paths]
         if len(target_models) > 1:
             target_chains = (
                 chains if chains else [c.id for model in target_models for c in model]
