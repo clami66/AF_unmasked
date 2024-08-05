@@ -22,8 +22,8 @@ from absl import logging
 from alphafold.data import parsers
 from alphafold.data.tools import hmmbuild
 from alphafold.data.tools import utils
+from alphafold.common import protein
 # Internal import (7716).
-
 
 class Hmmsearch(object):
   """Python wrapper of the hmmsearch binary."""
@@ -32,7 +32,7 @@ class Hmmsearch(object):
                *,
                binary_path: str,
                hmmbuild_binary_path: str,
-               database_path: str,
+               database_path,
                flags: Optional[Sequence[str]] = None):
     """Initializes the Python hmmsearch wrapper.
 
@@ -48,7 +48,17 @@ class Hmmsearch(object):
     """
     self.binary_path = binary_path
     self.hmmbuild_runner = hmmbuild.Hmmbuild(binary_path=hmmbuild_binary_path)
-    self.database_path = database_path
+    
+    if isinstance(database_path, list):
+      self.database_path = {}
+      for chain_id, db_path in zip(protein.PDB_CHAIN_IDS, database_path):
+        if not os.path.exists(db_path):
+          logging.error('Could not find hmmsearch database %s', database_path)
+          raise ValueError(f'Could not find hmmsearch database {database_path}')
+        self.database_path[chain_id] = db_path
+    else:
+      self.database_path = database_path
+
     if flags is None:
       # Default hmmsearch run settings.
       flags = ['--F1', '0.1',
@@ -60,10 +70,6 @@ class Hmmsearch(object):
                '--incdomE', '100']
     self.flags = flags
 
-    if not os.path.exists(self.database_path):
-      logging.error('Could not find hmmsearch database %s', database_path)
-      raise ValueError(f'Could not find hmmsearch database {database_path}')
-
   @property
   def output_format(self) -> str:
     return 'sto'
@@ -72,13 +78,13 @@ class Hmmsearch(object):
   def input_format(self) -> str:
     return 'sto'
 
-  def query(self, msa_sto: str) -> str:
+  def query(self, msa_sto: str, chain=None) -> str:
     """Queries the database using hmmsearch using a given stockholm msa."""
     hmm = self.hmmbuild_runner.build_profile_from_sto(msa_sto,
                                                       model_construction='hand')
-    return self.query_with_hmm(hmm)
+    return self.query_with_hmm(hmm, chain)
 
-  def query_with_hmm(self, hmm: str) -> str:
+  def query_with_hmm(self, hmm: str, chain) -> str:
     """Queries the database using hmmsearch using a given hmm."""
     with utils.tmpdir_manager() as query_tmp_dir:
       hmm_input_path = os.path.join(query_tmp_dir, 'query.hmm')
@@ -94,10 +100,13 @@ class Hmmsearch(object):
       # If adding flags, we have to do so before the output and input:
       if self.flags:
         cmd.extend(self.flags)
+        
+      db_path = self.database_path[chain] if chain else self.database_path
+
       cmd.extend([
           '-A', out_path,
           hmm_input_path,
-          self.database_path,
+          db_path,
       ])
 
       logging.info('Launching sub-process %s', cmd)
