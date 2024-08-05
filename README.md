@@ -51,22 +51,18 @@ This version of AlphaFold comes with a python script `prepare_templates.py` to s
 If you have a `.fasta` file containing multiple sequences:
 
 ```
->H1137,subunit1|
-MTEPPAPTAPLNKPKTPPYKLAGLILGLVGVLVLALTWMQFRGQFEDKVQLTVLSGRAG...
->H1137,subunit2|
-MSIKGTLFKLGIFSLVLLTFTALIFVVFGQIRFNRTTEYSAIFKNVSGLRDGQFVRAAG...
->H1137,subunit3|
-MRTLQGSDRFRKGLMGVIVVALIIGVGSTLTSVPMLFAVPTYYGQFADTGGLNIGDKVR...
-...
+>H1142,subunit1|_0
+GLEKDFLPLYFGWFLTKKSSETLRKAGQ...
+>H1142,subunit2|_0
+EVQLEESGGGLVQAGGSLTLSCAASGFT...
 ```
 
 And a `.pdb`/`.cif` file containing as many template chains as there are target chains in the fasta file, you can run e.g.:
 
 ```
-python prepare_templates.py --target examples/H1137/H1137.fasta \
-    --template examples/H1137/H1137.pdb \
+python prepare_templates.py --target examples/H1142/H1142.fasta \
+    --template examples/H1142/H1142.pdb \
     --output_dir AF_models/ \
-    --align
 ```
 
 When using a `.fasta` target, the outputs will be saved in a subfolder inside `output_dir` with the same name as the fasta file. In this case, the outputs will be stored inside `AF_models/H1137` because the fasta filename is `H1137.fasta`.
@@ -95,7 +91,6 @@ python prepare_templates.py --target examples/H1142/casp15_predictions/unbound_c
     examples/H1142/casp15_predictions/unbound_chain_B.pdb \
     --template examples/H1142/H1142.pdb \
     --output_dir AF_models/H1142 \
-    --align
 ```
 
 NB: in this case, the user needs to manually add to the output directory the name of the `.fasta` file that will be used in the AlphaFold run (`H1142.fasta` -> `--output_dir AF_models/H1142`).
@@ -106,23 +101,42 @@ The target chains can also come from the same PDB file, in that case it might be
 python prepare_templates.py --target examples/H1142/casp15_predictions/unbound_chains.pdb \
     --template examples/H1142/H1142.pdb \
     --output_dir AF_models/H1142 \
-    --align \
     --target_chains A B \
     --template_chains B C
 ```
 
 The target/template files are in `.pdb` format by default, but mmCIF is also supported. The `--mmcif_target`/`--mmcif_template` flags are expected in that case.
 
-**Assembling unbound structures onto template**
+**Templates that are remote homologs**
 
-When a template for an interaction is available that is a remote homolog of the target interaction, it might be useful to superimpose unbound monomers onto the template to create a coarse interaction model. Then, the coarse model made from putting together the unbound monomers will be itself used as template. This can be done with the `--superimpose` flag:
+By default, `AF_unmasked` uses a simple pairwise alignment to map the target sequences to the template coordinates. This is not always optimal, and you might want to use an alignment method that is more sensitive. One option is to disable this alignment in `prepare_templates.py` by passing the `--noalign` flag:
+
+```
+python prepare_templates.py --target examples/H1142/H1142.fasta \
+    --template examples/H1142/H1142.pdb \
+    --output_dir AF_models/ \
+    --noalign
+```
+
+then AlphaFold will perform its own template search on the custom templates. 
+
+If you have monomeric structures for all units in the complex, you can also perform structural alignments instead with `TM-align` or `lDDT_align`:
+
+```
+python prepare_templates.py --target examples/H1142/casp15_predictions/unbound_chain_A.pdb \
+    examples/H1142/casp15_predictions/unbound_chain_B.pdb \
+    --template examples/H1142/H1142.pdb \
+    --output_dir AF_models/ \
+    --align_tool tmalign # or lddt_align`
+```
+
+In some cases, it might be useful to superimpose unbound monomers onto the template to create a coarse interaction model. Then, the coarse model made from putting together the unbound monomers will be itself used as template. This can be done with the `--superimpose` flag:
 
 ```
 python prepare_templates.py --target examples/H1142/casp15_predictions/unbound_chain_A.pdb \
     examples/H1142/casp15_predictions/unbound_chain_B.pdb \
     --template examples/H1142/H1142.pdb \
     --output_dir AF_models/H1142 \
-    --align \
     --superimpose
 ```
 
@@ -136,6 +150,17 @@ python prepare_templates.py --target examples/H1137/H1137.fasta --template examp
 python prepare_templates.py --target examples/H1137/H1137.fasta --template examples/H1137/H1137.pdb --output_dir AF_models/ --align --append
 python prepare_templates.py --target examples/H1137/H1137.fasta --template examples/H1137/H1137.pdb --output_dir AF_models/ --align --append
 python prepare_templates.py --target examples/H1137/H1137.fasta --template examples/H1137/H1137.pdb --output_dir AF_models/ --align --append
+```
+
+**Inpainting of clashing residue pairs**
+
+When templates have clasing sets of amino acids, these are automatically detected and deleted by `prepare_tempalates.py` so that they can be inpainted during the predictions step. This behavior is enabled by default, but may be disabled with the `--noinpaint_clashes` flag:
+
+```
+python prepare_templates.py --target examples/H1142/H1142.fasta \
+    --template examples/H1142/H1142.pdb \
+    --output_dir AF_models/ \
+    --noinpaint_clashes
 ```
 
 ## Outputs
@@ -191,7 +216,7 @@ python run_alphafold.py --fasta_paths examples/H1137/H1137.fasta \
 
 ## Predicting homomers
 
-whenever running with homomers, or multimers containing multiple copies of any given chain, make sure to add the `--separate_homomer_msas` flag, in order to force AlphaFold to read the correct `pdb_hits.sto` template alignment:
+whenever running with homomers, or multimers containing multiple copies of any given chain, the `--separate_homomer_msas` flag (enabled by default) flag forces AlphaFold to read the correct `pdb_hits.sto` template alignment:
 
 ```
 python run_alphafold.py --fasta_paths examples/H1137/H1137.fasta \
@@ -204,7 +229,9 @@ python run_alphafold.py --fasta_paths examples/H1137/H1137.fasta \
     --separate_homomer_msas
 ```
 
-## Clipping the MSAs to speedup computation
+This behavior can be disabled with `--noseparate_homomer_msas`.
+
+## Clipping the MSAs to speed up computation
 
 Use the `[uniprot,mgnify,uniref,bfd]_max_hits` flags to limit the number of sequences to include from each alignment file. For example, if we only want to use 200 sequences from mgnify and uniref, while only keeping a single sequence from other alignments:
 

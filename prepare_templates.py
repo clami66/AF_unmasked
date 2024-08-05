@@ -48,7 +48,14 @@ def parse_args():
     parser.add_argument(
         "--align",
         action="store_true",
+        default=True,
         help="whether the template alignment file (pdb_hits.sto) should be generated",
+    )
+    parser.add_argument(
+        "--noalign",
+        action="store_false",
+        dest="align",
+        help="turn alignments off, let AlphaFold generate the pdb_hits.sto files",
     )
     parser.add_argument(
         "--align_tool",
@@ -88,9 +95,15 @@ def parse_args():
     )
     parser.add_argument(
         "--inpaint_clashes",
-        default=False,
+        default=True,
         action="store_true",
         help="If clashing residues between chains should be deleted from the template, this will let AF inpaint them during the modelling stage",
+    )
+    parser.add_argument(
+        "--noinpaint_clashes",
+        dest="inpaint_clashes",
+        action="store_false",
+        help="Turn automatic inpainting of clashes off",
     )
     parser.add_argument(
         "--target_chains",
@@ -178,15 +191,16 @@ def detect_and_remove_clashes(model, clash_threshold=3.5):
                 to_delete.add(ca_data[i])
                 to_delete.add(ca_data[j.index])
 
-
+    n_deleted = 0
     for chain in model:
         for i in to_delete:
             if i[0] == chain:
                 try:
                     chain.detach_child((' ', i[1], ' '))
+                    n_deleted += 1
                 except KeyError:
                     pass
-    return model
+    return n_deleted, model
 
 def get_fastaseq(model, chain):
     return "".join(seq1(aa.get_resname()) for aa in model[chain].get_residues())
@@ -325,11 +339,10 @@ def fix_mmcif(path, chains, sequences, revision_date):
 
 def do_align(ref_seq, ref_model, query_seq, query_model, alignment_type="blast"):
     alignment = []
-    print("DO ALIGN", alignment_type)
     if alignment_type == "blast":  # ref and query are sequences rather than structures
         aligner = Align.PairwiseAligner()
         aligner.substitution_matrix = Align.substitution_matrices.load("BLOSUM62")
-        #aligner.open_gap_score = -10
+        aligner.open_gap_score = -0.5
         #aligner.extend_gap_score = -0.5
         aln = aligner.align(ref_seq, query_seq)[0]
         try:  # compatibility between versions of Biopython
@@ -552,10 +565,12 @@ def main():
         template_chains = target_chains
 
     if args.inpaint_clashes:
-        template_model = detect_and_remove_clashes(template_model)
+        print("Deleting clashing residues...", end=" ")
+        n_deleted, template_model = detect_and_remove_clashes(template_model)
         template_sequences = [
             get_fastaseq(template_model, chain) for chain in template_chains
         ]
+        print(f"{n_deleted} clashes found.")
 
     io.set_structure(template_model)
     io.save(template_mmcif_path)
@@ -621,6 +636,7 @@ def main():
             if not fasta_target:
                 remove_extra_chains(this_template_model, [template_chain])
                 remove_extra_chains(this_target_model, [target_chain])
+            print(f"\nAligning fasta sequence {i+1} (seq: {target_sequence[0:10]}...) to template chain {template_chain} (seq: {template_sequence[0:10]}...)")
             alignment = do_align(
                 template_sequence,
                 this_template_model,

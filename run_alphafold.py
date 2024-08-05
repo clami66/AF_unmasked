@@ -153,7 +153,7 @@ flags.DEFINE_boolean('use_gpu_relax', None, 'Whether to relax on GPU. '
 flags.DEFINE_boolean('dropout', False, 'Turn on drop out during inference to get more diversity')
 flags.DEFINE_boolean('cross_chain_templates', False, 'Whether to include cross-chain distances in multimer templates')
 flags.DEFINE_boolean('cross_chain_templates_only', False, 'Whether to include cross-chain distances in multimer templates')
-flags.DEFINE_boolean('separate_homomer_msas', False, 'Whether to force separate processing of homomer MSAs')
+flags.DEFINE_boolean('separate_homomer_msas', True, 'Whether to force separate processing of homomer MSAs')
 flags.DEFINE_list('models_to_use',None, 'specify which models in model_preset that should be run')
 flags.DEFINE_list('msa_mask', None, 'Ranges of residues where the MSA should be used. MSA columsn for all other residues will be masked out (e.g. "1:100 150:200")')
 
