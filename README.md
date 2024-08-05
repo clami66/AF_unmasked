@@ -2,6 +2,12 @@
 
 ![H1111](fig/header.png)
 
+## On Google Colab
+
+A simplified version of AF_unmasked is available to run as notebook on Google Colab. Try it by clicking on the button below:
+
+[![Open in Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/clami66/AF_unmasked/blob/notebook/notebooks/AF_unmasked.ipynb)
+
 ## Installing AF_unmasked
 
 The installation and setup procedure is the same as for the regular version of AlphaFold (non-docker version). We recommend Anaconda and mamba along with pip3 to manage the necessary software packages:
