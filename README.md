@@ -65,7 +65,7 @@ python prepare_templates.py --target examples/H1142/H1142.fasta \
     --output_dir AF_models/ \
 ```
 
-When using a `.fasta` target, the outputs will be saved in a subfolder inside `output_dir` with the same name as the fasta file. In this case, the outputs will be stored inside `AF_models/H1137` because the fasta filename is `H1137.fasta`.
+When using a `.fasta` target, the outputs will be saved in a subfolder inside `output_dir` with the same name as the fasta file. In this case, the outputs will be stored inside `AF_models/H1142` because the fasta filename is `H1142.fasta`.
 
 **Chain mapping flags**
 
@@ -145,11 +145,11 @@ AlphaFold takes up to four structural templates as input. Once the first templat
 
 ```
 # prepare the first template
-python prepare_templates.py --target examples/H1137/H1137.fasta --template examples/H1137/H1137.pdb --output_dir AF_models/ --align
+python prepare_templates.py --target examples/H1142/H1142.fasta --template examples/H1142/H1142.pdb --output_dir AF_models/
 # running the same command three more times to fill the four template slots while using different templates
-python prepare_templates.py --target examples/H1137/H1137.fasta --template examples/H1137/H1137.pdb --output_dir AF_models/ --align --append
-python prepare_templates.py --target examples/H1137/H1137.fasta --template examples/H1137/H1137.pdb --output_dir AF_models/ --align --append
-python prepare_templates.py --target examples/H1137/H1137.fasta --template examples/H1137/H1137.pdb --output_dir AF_models/ --align --append
+python prepare_templates.py --target examples/H1142/H1142.fasta --template examples/H1142/H1142.pdb --output_dir AF_models/ --append
+python prepare_templates.py --target examples/H1142/H1142.fasta --template examples/H1142/H1142.pdb --output_dir AF_models/ --append
+python prepare_templates.py --target examples/H1142/H1142.fasta --template examples/H1142/H1142.pdb --output_dir AF_models/ --append
 ```
 
 **Inpainting of clashing residue pairs**
@@ -168,9 +168,9 @@ python prepare_templates.py --target examples/H1142/H1142.fasta \
 Having run `prepare_templates.py` four times (one per template), the output directory `AF_models/` will look as follows:
 
 ```bash
-AF_models/H1137/
-├── H1137.fasta  # target fasta file
-├── H1137.pdb    # template pdb file
+AF_models/H1142/
+├── H1142.fasta  # target fasta file
+├── H1142.pdb    # template pdb file
 ├── msas
 │   ├── A
 │   │   └── pdb_hits.sto
@@ -202,17 +202,15 @@ Once templates have been prepared, invoke AlphaFold with the generated flagfile 
 Use the `--cross_chain_templates` or `--cross_chain_templates_only` flags if you want to use both intra- and inter-chain constraints from the template, or inter-chain constraints alone:
 
 ```
-python run_alphafold.py --fasta_paths examples/H1137/H1137.fasta \
+python run_alphafold.py --fasta_paths examples/H1142/H1142.fasta \
     --flagfile ./databases.flag \
-    --flagfile examples/H1137/template_data/templates.flag \
+    --flagfile examples/H1142/template_data/templates.flag \
     --output_dir AF_models \  # same output folder used with prepare_templates.py
     --cross_chain_templates \
     --dropout \
     --model_preset='multimer_v2'
 ```
 **NB: the --output_dir flag should be passed the same directory as when running prepare_templates.py**. So that AlphaFold uses the correct `pdb_hits.sto` files when parsing the template data.
-
-**NB: the alignment step for H1137 can take a long time, precomputed alignments are available in `examples/H1137/msas/`. These can be copied to `AF_models/H1137/msas/` to speed up computation**
 
 ## Predicting homomers
 
@@ -236,17 +234,17 @@ This behavior can be disabled with `--noseparate_homomer_msas`.
 Use the `[uniprot,mgnify,uniref,bfd]_max_hits` flags to limit the number of sequences to include from each alignment file. For example, if we only want to use 200 sequences from mgnify and uniref, while only keeping a single sequence from other alignments:
 
 ```
-python run_alphafold.py --fasta_paths examples/H1137/H1137.fasta \
+python run_alphafold.py --fasta_paths examples/H1142/H1142.fasta \
     --flagfile ./databases.flag \
-    --flagfile examples/H1137/template_data/templates.flag \
+    --flagfile examples/H1142/template_data/templates.flag \
     --output_dir AF_models \
     --cross_chain_templates \
     --dropout \
     --model_preset='multimer_v2' \
     --separate_homomer_msas \
     --uniprot_max_hits 1 \
-    --mgnify_max_hits 200 \
-    --uniref_max_hits 200 \
+    --mgnify_max_hits 100 \
+    --uniref_max_hits 100 \
     --bfd_max_hits 1
 ```
 
