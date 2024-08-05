@@ -152,7 +152,7 @@ class DataPipeline:
     self.bfd_max_hits = bfd_max_hits
     self.use_precomputed_msas = use_precomputed_msas
 
-  def process(self, input_fasta_path: str, msa_output_dir: str) -> FeatureDict:
+  def process(self, input_fasta_path: str, msa_output_dir: str, chain_id=None) -> FeatureDict:
     """Runs alignment tools on the input sequence and creates features."""
     with open(input_fasta_path) as f:
       input_fasta_str = f.read()
@@ -190,7 +190,7 @@ class DataPipeline:
         msa_output_dir, f'pdb_hits.{self.template_searcher.output_format}')
     if not self.use_precomputed_msas or not os.path.isfile(pdb_hits_out_path):
       if self.template_searcher.input_format == 'sto':
-        pdb_templates_result = self.template_searcher.query(msa_for_templates)
+        pdb_templates_result = self.template_searcher.query(msa_for_templates, chain_id)
       elif self.template_searcher.input_format == 'a3m':
         uniref90_msa_as_a3m = parsers.convert_stockholm_to_a3m(msa_for_templates)
         pdb_templates_result = self.template_searcher.query(uniref90_msa_as_a3m)
