@@ -1,6 +1,7 @@
 import os
 import re
 import sys
+import gzip
 import pickle
 import tempfile
 import traceback
@@ -70,18 +71,6 @@ def parse_args():
         default="2100-01-01",
     )
     parser.add_argument(
-        "--mmcif_target",
-        default=False,
-        action="store_true",
-        help="The target(s) are in mmCIF format",
-    )
-    parser.add_argument(
-        "--mmcif_template",
-        default=False,
-        action="store_true",
-        help="The template is in mmCIF format",
-    )
-    parser.add_argument(
         "--append",
         default=False,
         action="store_true",
@@ -129,21 +118,20 @@ def is_fasta(path):
 
 
 def load_PDB(path, n_model=0, is_mmcif=False):
-
-    if not is_mmcif:
-        pdb_parser = PDBParser(QUIET=True)
-    else:
-        pdb_parser = MMCIFParser(QUIET=True)
-
     try:
-        structure = pdb_parser.get_structure("-", path)
+        pdb_parser = PDBParser(QUIET=True)
+        structure = pdb_parser.get_structure(
+            "-",
+            (gzip.open if path.endswith(".gz") else open)(path, "rt"),
+        )
         model = structure[n_model]
-    except Exception as e:
-        print("ERROR: is the file in the correct format? (.pdb, .cif)")
-        if not is_mmcif:
-            print("       (use -mmcif_model or -mmcif_native with mmCIF inputs)")
-        print(traceback.format_exc())
-        sys.exit(1)
+    except Exception:
+        pdb_parser = MMCIFParser(QUIET=True)
+        structure = pdb_parser.get_structure(
+            "-",
+            (gzip.open if path.endswith(".gz") else open)(path, "rt"),
+        )
+        model = structure[n_model]
     return model
 
 
@@ -351,7 +339,6 @@ def do_align(ref_seq, ref_model, query_seq, query_model, alignment_type="blast")
         except:
             alignment.append(aln.format().split("\n")[0])
             alignment.append(aln.format().split("\n")[2])
-        print("\n".join(alignment))
     else:  # work with structural alignments instead
         ref_tempfile = tempfile.NamedTemporaryFile()
         query_tempfile = tempfile.NamedTemporaryFile()
@@ -385,6 +372,7 @@ def do_align(ref_seq, ref_model, query_seq, query_model, alignment_type="blast")
                 sys.exit(1)
         ref_tempfile.close()
         query_tempfile.close()
+    print("\n".join(alignment))
     return alignment
 
 
@@ -636,7 +624,7 @@ def main():
             if not fasta_target:
                 remove_extra_chains(this_template_model, [template_chain])
                 remove_extra_chains(this_target_model, [target_chain])
-            print(f"\nAligning fasta sequence {i+1} (seq: {target_sequence[0:10]}...) to template chain {template_chain} (seq: {template_sequence[0:10]}...)")
+            print(f"\nAligning target sequence {i+1} (seq: {target_sequence[0:10]}...) to template chain {template_chain} (seq: {template_sequence[0:10]}...)")
             alignment = do_align(
                 template_sequence,
                 this_template_model,
