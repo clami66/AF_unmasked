@@ -49,7 +49,7 @@ def parse_args():
     parser.add_argument(
         "--align",
         action="store_true",
-        default=True,
+        default=False,
         help="whether the template alignment file (pdb_hits.sto) should be generated",
     )
     parser.add_argument(
@@ -158,7 +158,6 @@ def remove_hetatms(model):
 
 
 def detect_and_remove_clashes(model, clash_threshold=3.5):
-
     # Extract CA atoms from the structure
     ca_atoms = []
     ca_data = []
@@ -569,22 +568,26 @@ def main():
     fix_mmcif(
         template_mmcif_path, template_chains, template_sequences, args.revision_date
     )
-
-    pdb_seqres_path = Path(args.out_dir, "template_data", "pdb_seqres.txt").resolve()
-    write_seqres(
-        pdb_seqres_path,
-        template_sequences,
-        template_chains,
-        seq_id=next_id,
-        append=args.append,
-    )
+    
+    pdb_seqres_paths = []
+    for i, (template_chain, template_sequence) in enumerate(zip(template_chains, template_sequences)):
+        msa_chain = ascii_upperlower[i]
+        pdb_seqres_path = Path(args.out_dir, "template_data", f"pdb_seqres_{msa_chain}.txt").resolve()
+        pdb_seqres_paths.append(str(pdb_seqres_path))
+        write_seqres(
+            pdb_seqres_path,
+            [template_sequence],
+            [template_chain],
+            seq_id=next_id,
+            append=args.append,
+        )
 
     # extra flagfile for AF usage
     af_flagfile_path = Path(args.out_dir, "template_data", "templates.flag")
     if not af_flagfile_path.is_file():  # don't overwrite file if already there
         with open(af_flagfile_path, "w") as flagfile:
             flagfile.write(f"--template_mmcif_dir={mmcif_path.resolve()}\n")
-            flagfile.write(f"--pdb_seqres_database_path={pdb_seqres_path}\n")
+            flagfile.write(f"--pdb_seqres_database_path={','.join(pdb_seqres_paths)}\n")
             if args.align:  # means we are not going to let AF overwrite pdb_hits.sto
                 flagfile.write("--use_precomputed_msas\n")
     """
