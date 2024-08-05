@@ -117,7 +117,7 @@ def is_fasta(path):
     return True if records else False
 
 
-def load_PDB(path, n_model=0, is_mmcif=False):
+def load_PDB(path, n_model=0):
     try:
         pdb_parser = PDBParser(QUIET=True)
         structure = pdb_parser.get_structure(
@@ -191,7 +191,11 @@ def detect_and_remove_clashes(model, clash_threshold=3.5):
     return n_deleted, model
 
 def get_fastaseq(model, chain):
-    return "".join(seq1(aa.get_resname()) for aa in model[chain].get_residues())
+    if chain != "-":
+        fastaseq = "".join(seq1(aa.get_resname()) for aa in model[chain].get_residues())
+    else:
+        fastaseq = "-"
+    return fastaseq
 
 
 def write_seqres(path, sequences, chains, seq_id="0000", append=False):
@@ -523,11 +527,10 @@ def main():
             args.target,
             chains=args.target_chains,
             is_fasta=fasta_target,
-            is_mmcif=args.mmcif_target,
         )
 
     # Handling the template file: convert to a compatible mmCIF file, write sequences to pdb_seqres.txt
-    template_model = load_PDB(args.template, is_mmcif=args.mmcif_template)
+    template_model = load_PDB(args.template)
     # template sequences are needed to write out the pdb_seqres.txt file
     template_chains = (
         args.template_chains if args.template_chains else [c.id for c in template_model]
