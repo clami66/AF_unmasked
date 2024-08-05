@@ -113,7 +113,7 @@ class Hmmsearch(object):
       process = subprocess.Popen(
           cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
       with utils.timing(
-          f'hmmsearch ({os.path.basename(self.database_path)}) query'):
+          f'hmmsearch ({os.path.basename(db_path)}) query'):
         stdout, stderr = process.communicate()
         retcode = process.wait()
 
