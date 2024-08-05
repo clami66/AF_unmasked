@@ -102,7 +102,6 @@ class Hmmsearch(object):
         cmd.extend(self.flags)
         
       db_path = self.database_path[chain_id] if chain_id else self.database_path
-      print(db_path, chain_id)
       cmd.extend([
           '-A', out_path,
           hmm_input_path,
