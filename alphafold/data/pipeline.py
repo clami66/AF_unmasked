@@ -193,7 +193,7 @@ class DataPipeline:
         pdb_templates_result = self.template_searcher.query(msa_for_templates, chain_id)
       elif self.template_searcher.input_format == 'a3m':
         uniref90_msa_as_a3m = parsers.convert_stockholm_to_a3m(msa_for_templates)
-        pdb_templates_result = self.template_searcher.query(uniref90_msa_as_a3m)
+        pdb_templates_result = self.template_searcher.query(uniref90_msa_as_a3m, chain_id)
       else:
         raise ValueError('Unrecognized template input format: '
                         f'{self.template_searcher.input_format}')

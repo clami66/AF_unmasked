@@ -78,13 +78,13 @@ class Hmmsearch(object):
   def input_format(self) -> str:
     return 'sto'
 
-  def query(self, msa_sto: str, chain=None) -> str:
+  def query(self, msa_sto: str, chain_id=None) -> str:
     """Queries the database using hmmsearch using a given stockholm msa."""
     hmm = self.hmmbuild_runner.build_profile_from_sto(msa_sto,
                                                       model_construction='hand')
-    return self.query_with_hmm(hmm, chain)
+    return self.query_with_hmm(hmm, chain_id)
 
-  def query_with_hmm(self, hmm: str, chain) -> str:
+  def query_with_hmm(self, hmm: str, chain_id) -> str:
     """Queries the database using hmmsearch using a given hmm."""
     with utils.tmpdir_manager() as query_tmp_dir:
       hmm_input_path = os.path.join(query_tmp_dir, 'query.hmm')
@@ -101,8 +101,8 @@ class Hmmsearch(object):
       if self.flags:
         cmd.extend(self.flags)
         
-      db_path = self.database_path[chain] if chain else self.database_path
-
+      db_path = self.database_path[chain_id] if chain_id else self.database_path
+      print(db_path, chain_id)
       cmd.extend([
           '-A', out_path,
           hmm_input_path,
