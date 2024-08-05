@@ -53,8 +53,8 @@ class Hmmsearch(object):
       self.database_path = {}
       for chain_id, db_path in zip(protein.PDB_CHAIN_IDS, database_path):
         if not os.path.exists(db_path):
-          logging.error('Could not find hmmsearch database %s', database_path)
-          raise ValueError(f'Could not find hmmsearch database {database_path}')
+          logging.error('Could not find hmmsearch database %s', db_path)
+          raise ValueError(f'Could not find hmmsearch database {db_path}')
         self.database_path[chain_id] = db_path
     else:
       self.database_path = database_path
