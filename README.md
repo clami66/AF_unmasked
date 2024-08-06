@@ -203,11 +203,12 @@ AF_models/H1142/
     │   ├── 0001.cif
     │   ├── 0002.cif
     │   └── 0003.cif
-    ├── pdb_seqres.txt
+    ├── pdb_seqres_A.txt
+    ├── pdb_seqres_B.txt
     └── templates.flag
 ```
 
-The `template_data/` subfolder mimics AlphaFold's database of PDB structures, where only four PDB structures are included (one per template). Whatever the name of the template, the `.cif` PDB files are renumbered from 0000 to 0003.
+The `template_data/` subfolder mimics AlphaFold's database of PDB structures, where up to four PDB structures are included (one per template). Whatever the name of the template, the `.cif` PDB files are renumbered from 0000 to 0003. A sequence database `pdb_seqres_X.txt` is generated for each sequence in the input. This allows AlphaFold to search in a specific database for each input sequence, so that only the appropriate template chains are applied to that sequence.
 
 The `msas/` folder contains the alignments to map the target sequence onto the template coordinates if the `--align` flag was used. AlphaFold will not overwrite the files if they have been generated in the template preparation step.
 
