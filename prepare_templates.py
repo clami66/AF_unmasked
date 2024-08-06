@@ -582,6 +582,7 @@ def main():
     af_flagfile_path = Path(args.out_dir, "template_data", "templates.flag")
     if not af_flagfile_path.is_file():  # don't overwrite file if already there
         with open(af_flagfile_path, "w") as flagfile:
+            flagfile.write(f"--cross_chain_templates\n")
             flagfile.write(f"--template_mmcif_dir={mmcif_path.resolve()}\n")
             flagfile.write(f"--pdb_seqres_database_path={','.join(pdb_seqres_paths)}\n")
             if args.align:  # means we are not going to let AF overwrite pdb_hits.sto
