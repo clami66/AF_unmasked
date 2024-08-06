@@ -53,12 +53,6 @@ def parse_args():
         help="whether the template alignment file (pdb_hits.sto) should be generated",
     )
     parser.add_argument(
-        "--noalign",
-        action="store_false",
-        dest="align",
-        help="turn alignments off, let AlphaFold generate the pdb_hits.sto files",
-    )
-    parser.add_argument(
         "--align_tool",
         type=str,
         help="alignment tool",
@@ -193,7 +187,7 @@ def get_fastaseq(model, chain):
     if chain != "-":
         fastaseq = "".join(seq1(aa.get_resname()) for aa in model[chain].get_residues())
     else:
-        fastaseq = "-"
+        fastaseq = "NOTEMPLATE"
     return fastaseq
 
 
@@ -207,6 +201,9 @@ def write_seqres(path, sequences, chains, seq_id="0000", append=False):
     """
     with open(path, mode="a" if append else "w") as out:
         for sequence, chain in zip(sequences, chains):
+            if chain == "-":
+                chain = "A"
+                seq_id = "9999"
             out.write(f">{seq_id}_{chain} mol:protein length:{len(sequence)}\n")
             out.write(f"{sequence}\n")
     return
@@ -565,7 +562,7 @@ def main():
     io.save(template_mmcif_path)
 
     fix_mmcif(
-        template_mmcif_path, template_chains, template_sequences, args.revision_date
+        template_mmcif_path, [ch for ch in template_chains if ch != "-"], template_sequences, args.revision_date
     )
     
     pdb_seqres_paths = []
