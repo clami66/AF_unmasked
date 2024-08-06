@@ -233,8 +233,6 @@ python run_alphafold.py --fasta_paths examples/H1142/H1142.fasta \
 
 From our experiments, the best v2/v3 AF models to use multimeric templates are `model_5` (best overall), followed by `model_1`. In order to save time and resources, we recommend using the flag `--models_to_use` to specify one or more of those:
 
-Example:
-
 ```
 python run_alphafold.py --fasta_paths examples/H1142/H1142.fasta \
     --flagfile ./databases.flag \
@@ -243,7 +241,7 @@ python run_alphafold.py --fasta_paths examples/H1142/H1142.fasta \
     --models_to_use=model_5_multimer_v2,model_5_multimer_v3
 ```
 
-This will generate 2 (models) * 5 (predictions) = 10 predictions. You can encourage additional sampling, similarly to [AF_sample](https://github.com/bjornwallner/alphafoldv2.2.0), with the `--dropout` and `--num_multimer_predictions_per_model` flags:
+The previous command will generate 2 (models) * 5 (predictions) = 10 predictions. You can encourage additional sampling, similarly to [AF_sample](https://github.com/bjornwallner/alphafoldv2.2.0), with the `--dropout` and `--num_multimer_predictions_per_model` flags:
 
 ```
 python run_alphafold.py --fasta_paths examples/H1142/H1142.fasta \
