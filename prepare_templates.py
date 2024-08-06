@@ -49,14 +49,8 @@ def parse_args():
     parser.add_argument(
         "--align",
         action="store_true",
-        default=True,
+        default=False,
         help="whether the template alignment file (pdb_hits.sto) should be generated",
-    )
-    parser.add_argument(
-        "--noalign",
-        action="store_false",
-        dest="align",
-        help="turn alignments off, let AlphaFold generate the pdb_hits.sto files",
     )
     parser.add_argument(
         "--align_tool",
@@ -158,7 +152,6 @@ def remove_hetatms(model):
 
 
 def detect_and_remove_clashes(model, clash_threshold=3.5):
-
     # Extract CA atoms from the structure
     ca_atoms = []
     ca_data = []
@@ -194,7 +187,7 @@ def get_fastaseq(model, chain):
     if chain != "-":
         fastaseq = "".join(seq1(aa.get_resname()) for aa in model[chain].get_residues())
     else:
-        fastaseq = "-"
+        fastaseq = "NOTEMPLATE"
     return fastaseq
 
 
@@ -208,6 +201,9 @@ def write_seqres(path, sequences, chains, seq_id="0000", append=False):
     """
     with open(path, mode="a" if append else "w") as out:
         for sequence, chain in zip(sequences, chains):
+            if chain == "-":
+                chain = "A"
+                seq_id = "9999"
             out.write(f">{seq_id}_{chain} mol:protein length:{len(sequence)}\n")
             out.write(f"{sequence}\n")
     return
@@ -521,13 +517,12 @@ def main():
         else:
             args.align_tool = "tmalign"
 
-    # load target data if needed
-    if args.align or args.superimpose:
-        target_chains, target_sequences, target_models = get_target_data(
-            args.target,
-            chains=args.target_chains,
-            is_fasta=fasta_target,
-        )
+    # load target data
+    target_chains, target_sequences, target_models = get_target_data(
+        args.target,
+        chains=args.target_chains,
+        is_fasta=fasta_target,
+    )
 
     # Handling the template file: convert to a compatible mmCIF file, write sequences to pdb_seqres.txt
     template_model = load_PDB(args.template)
@@ -567,24 +562,29 @@ def main():
     io.save(template_mmcif_path)
 
     fix_mmcif(
-        template_mmcif_path, template_chains, template_sequences, args.revision_date
+        template_mmcif_path, [ch for ch in template_chains if ch != "-"], template_sequences, args.revision_date
     )
-
-    pdb_seqres_path = Path(args.out_dir, "template_data", "pdb_seqres.txt").resolve()
-    write_seqres(
-        pdb_seqres_path,
-        template_sequences,
-        template_chains,
-        seq_id=next_id,
-        append=args.append,
-    )
+    
+    pdb_seqres_paths = []
+    for i, (template_chain, template_sequence) in enumerate(zip(template_chains, template_sequences)):
+        msa_chain = target_chains[i]
+        pdb_seqres_path = Path(args.out_dir, "template_data", f"pdb_seqres_{msa_chain}.txt").resolve()
+        pdb_seqres_paths.append(str(pdb_seqres_path))
+        write_seqres(
+            pdb_seqres_path,
+            [template_sequence],
+            [template_chain],
+            seq_id=next_id,
+            append=args.append,
+        )
 
     # extra flagfile for AF usage
     af_flagfile_path = Path(args.out_dir, "template_data", "templates.flag")
     if not af_flagfile_path.is_file():  # don't overwrite file if already there
         with open(af_flagfile_path, "w") as flagfile:
+            flagfile.write(f"--cross_chain_templates\n")
             flagfile.write(f"--template_mmcif_dir={mmcif_path.resolve()}\n")
-            flagfile.write(f"--pdb_seqres_database_path={pdb_seqres_path}\n")
+            flagfile.write(f"--pdb_seqres_database_path={','.join(pdb_seqres_paths)}\n")
             if args.align:  # means we are not going to let AF overwrite pdb_hits.sto
                 flagfile.write("--use_precomputed_msas\n")
     """
