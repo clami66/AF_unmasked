@@ -52,7 +52,7 @@ We recommend using the "v2" multimer parameter files. These will be downloaded a
 
 This version of AlphaFold comes with a python script `prepare_templates.py` to set up multimeric templates before a run.
 
-**Quick start**
+### Quick start
 
 If you have a `.fasta` file containing multiple sequences:
 
@@ -73,7 +73,7 @@ python prepare_templates.py --target examples/H1142/H1142.fasta \
 
 When using a `.fasta` target, the outputs will be saved in a subfolder inside `output_dir` with the same name as the fasta file. In this case, the outputs will be stored inside `AF_models/H1142` because the fasta filename is `H1142.fasta`.
 
-**Chain mapping flags**
+#### Chain mapping flags
 
 The previous example assumes that the first chain in the `.fasta` file maps to the first chain in the `.pdb` template, and so on. If not, it is necessary to specify the mapping. For example, if the first sequence in the `.fasta` file maps to the `B` chain in the template, and the second sequence maps to the `C` chain in the template, you can run:
 
@@ -87,7 +87,7 @@ python prepare_templates.py --target examples/H1142/H1142.fasta \
 
 The `--target_chains`/`--template_chains` mapping flags are also necessary when the template contains more/fewer chains than there are sequences in the input `.fasta` file.
 
-**Partial templates**
+#### Partial templates
 
 If a template only covers a subset of the target sequences, you must specify this in the template preparation step. If, for example, a dimer template `AB` is available for a trimeric complex `ABC`, then you must specify which two sequences are covered by the template:
 
@@ -101,7 +101,7 @@ python prepare_templates.py --target examples/H1142/H1142.fasta \
 
 Where the `-` placeholder specifies which target chain will not be covered by the template (in this case, target chain `C`).
 
-**Input structures instead of sequences**
+#### Input structures instead of sequences
 
 It is possible to prepare templates starting from `.pdb`/`.cif` files instead of `.fasta` sequences. This is useful, for example, when the user wants to start from monomeric predictions of each target chain and align them against a multimer template structure. For example, if two unbound structures for chains `A` and `B` are available in PDB format:
 
@@ -126,7 +126,7 @@ python prepare_templates.py --target examples/H1142/casp15_predictions/unbound_c
 
 The target/template files are in `.pdb` format by default, but mmCIF is also supported. The `--mmcif_target`/`--mmcif_template` flags are expected in that case.
 
-**Templates that are remote homologs**
+#### Remote homology and controlling the alignments
 
 By default, `AF_unmasked` lets AlphaFold perform alignments between templates and targets. If you want to control the alignment step, you can force this behavior with the `--align` flag:
 
@@ -139,7 +139,7 @@ python prepare_templates.py --target examples/H1142/H1142.fasta \
 
 which will generate `pdb_hits.sto` alignments files in the `msa/` folders.
 
-If you have monomeric structures for all units in the complex, you can make so that the alignments are structural (with `TM-align` or `lDDT_align`):
+By default, these are simple sequence-pair alignments. But if you have monomeric structures for all units in the complex, you can make so that the alignments are structural (with `TM-align` or `lDDT_align`):
 
 ```
 python prepare_templates.py --target examples/H1142/casp15_predictions/unbound_chain_A.pdb \
@@ -160,7 +160,7 @@ python prepare_templates.py --target examples/H1142/casp15_predictions/unbound_c
     --superimpose
 ```
 
-**Adding further templates**
+#### Adding further templates
 AlphaFold takes up to four structural templates as input. Once the first template has been generated with `prepare_templates.py`, three more can be added with the `--append` flag. These can be the same template as the first, repeated three more times, or different templates:
 
 ```
@@ -172,7 +172,7 @@ python prepare_templates.py --target examples/H1142/H1142.fasta --template examp
 python prepare_templates.py --target examples/H1142/H1142.fasta --template examples/H1142/H1142.pdb --output_dir AF_models/ --append
 ```
 
-**Inpainting of clashing residue pairs**
+#### Inpainting of clashing residue pairs
 
 When templates have clasing sets of amino acids, these are automatically detected and deleted by `prepare_tempalates.py` so that they can be inpainted during the predictions step. This behavior is enabled by default, but may be disabled with the `--noinpaint_clashes` flag:
 
@@ -183,7 +183,7 @@ python prepare_templates.py --target examples/H1142/H1142.fasta \
     --noinpaint_clashes
 ```
 
-## Outputs
+### Outputs
 
 Having run `prepare_templates.py` four times (one per template), the output directory `AF_models/` will look as follows:
 
@@ -229,7 +229,7 @@ python run_alphafold.py --fasta_paths examples/H1142/H1142.fasta \
 
 **NB: the --output_dir flag should be passed the same directory as when running prepare_templates.py**. So that AlphaFold uses the correct `pdb_hits.sto` files when parsing the template data.
 
-**Neural network models**
+#### Neural network models
 
 From our experiments, the best v2/v3 AF models to use multimeric templates are `model_5` (best overall), followed by `model_1`. In order to save time and resources, we recommend using the flag `--models_to_use` to specify one of the following:
 
@@ -265,7 +265,7 @@ Which will generate 2 * 100 = 200 predictions.
 Cross-chain restraints from templates are enabled by default. You can use the flag `--cross_chain_templates_only` to only use inter-chain constraints and disregard the intra-chain constraints or `--nocross_chain_templates` to disable them altogether (similar to standard AlphaFold).
 
 
-## Clipping the MSAs to speed up computation
+#### Clipping the MSAs to speed up computation
 
 Use the `[uniprot,mgnify,uniref,bfd]_max_hits` flags to limit the number of sequences to include from each alignment file. For example, if we only want to use 200 sequences from mgnify and uniref, while only keeping a single sequence from other alignments:
 
@@ -288,7 +288,7 @@ We usually recommend setting `--uniprot_max_hits 1` on most scenarios so that MS
 
 In general, limiting the number of alignments from MSAs forces AlphaFold to rely more on the templates, while speeding up computation. Maximum speedup is achieved by making sure that the maximum total number of sequences in the final alignment is no more than 512.
 
-## Predicting homomers
+#### Predicting homomers
 
 Whenever predicting homomers (or multimers containing multiple copies of any given chain) the `--separate_homomer_msas` flag (enabled by default) forces AlphaFold to use separate MSAs, one for each chain, rather than a single one for all identical chains. This behavior can be disabled with `--noseparate_homomer_msas`.
 
