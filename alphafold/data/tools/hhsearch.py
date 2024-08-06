@@ -64,7 +64,7 @@ class HHSearch:
   def input_format(self) -> str:
     return 'a3m'
 
-  def query(self, a3m: str) -> str:
+  def query(self, a3m: str, chain_id=None) -> str:
     """Queries the database using HHsearch using a given a3m."""
     with utils.tmpdir_manager() as query_tmp_dir:
       input_path = os.path.join(query_tmp_dir, 'query.a3m')
