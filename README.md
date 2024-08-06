@@ -231,12 +231,7 @@ python run_alphafold.py --fasta_paths examples/H1142/H1142.fasta \
 
 #### Neural network models
 
-From our experiments, the best v2/v3 AF models to use multimeric templates are `model_5` (best overall), followed by `model_1`. In order to save time and resources, we recommend using the flag `--models_to_use` to specify one of the following:
-
-* `model_5_multimer_v2`
-* `model_5_multimer_v3`
-* `model_1_multimer_v3`
-* `model_1_multimer_v2`
+From our experiments, the best v2/v3 AF models to use multimeric templates are `model_5` (best overall), followed by `model_1`. In order to save time and resources, we recommend using the flag `--models_to_use` to specify one or more of those:
 
 Example:
 
