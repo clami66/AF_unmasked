@@ -654,30 +654,31 @@ def main():
             if not fasta_target:
                 remove_extra_chains(this_template_model, [template_chain])
                 remove_extra_chains(this_target_model, [target_chain])
-            print(
-                f"\nAligning target sequence {i+1} (seq: {target_sequence[0:10]}...) to template chain {template_chain} (seq: {template_sequence[0:10]}...)"
-            )
-            alignment = do_align(
-                template_sequence,
-                this_template_model,
-                target_sequence,
-                this_target_model,
-                alignment_type=args.align_tool,
-            )
-            sto_alignment = format_alignment_stockholm(
-                alignment, hit_id=next_id, hit_chain=template_chain
-            )
+            if template_chain != "-":
+                print(
+                    f"\nAligning target sequence {i+1} (seq: {target_sequence[0:10]}...) to template chain {template_chain} (seq: {template_sequence[0:10]}...)"
+                )
+                alignment = do_align(
+                    template_sequence,
+                    this_template_model,
+                    target_sequence,
+                    this_target_model,
+                    alignment_type=args.align_tool,
+                )
+                sto_alignment = format_alignment_stockholm(
+                    alignment, hit_id=next_id, hit_chain=template_chain
+                )
 
-            msa_path = f"msas/{msa_chain}"
+                msa_path = f"msas/{msa_chain}"
 
-            # write alignment to file
-            Path(args.out_dir, msa_path).mkdir(parents=True, exist_ok=True)
-            with open(
-                Path(args.out_dir, msa_path, "pdb_hits.sto"),
-                mode="a" if args.append else "w",
-            ) as pdb_hits:
-                for line in sto_alignment:
-                    pdb_hits.write(line)
+                # write alignment to file
+                Path(args.out_dir, msa_path).mkdir(parents=True, exist_ok=True)
+                with open(
+                    Path(args.out_dir, msa_path, "pdb_hits.sto"),
+                    mode="a" if args.append else "w",
+                ) as pdb_hits:
+                    for line in sto_alignment:
+                        pdb_hits.write(line)
 
     if not fasta_target:
         print(
