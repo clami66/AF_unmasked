@@ -41,7 +41,8 @@ def parse_args():
         required=True,
     )
     parser.add_argument(
-        "--out_dir", "--output_dir",
+        "--out_dir",
+        "--output_dir",
         type=str,
         help="path to output folder, which will include the template's structure, stockholm alignments and flagfile for usage on AlphaFold",
         default="./AF_models",
@@ -157,8 +158,8 @@ def detect_and_remove_clashes(model, clash_threshold=3.5):
     ca_data = []
     for chain in model:
         for residue in chain:
-            if residue.has_id('CA'):
-                coords = residue['CA'].get_coord()
+            if residue.has_id("CA"):
+                coords = residue["CA"].get_coord()
                 ca_atoms.append(coords)
                 ca_data.append((chain, int(residue.id[1])))
 
@@ -177,11 +178,12 @@ def detect_and_remove_clashes(model, clash_threshold=3.5):
         for i in to_delete:
             if i[0] == chain:
                 try:
-                    chain.detach_child((' ', i[1], ' '))
+                    chain.detach_child((" ", i[1], " "))
                     n_deleted += 1
                 except KeyError:
                     pass
     return n_deleted, model
+
 
 def get_fastaseq(model, chain):
     if chain != "-":
@@ -277,8 +279,7 @@ def fix_mmcif(path, chains, sequences, revision_date):
     # B 2 N
     pdb_data.insert(
         2,
-        "\n".join([f"{chain} {c+1} N" for c, chain in enumerate(chains)])
-        + "\n#\n",
+        "\n".join([f"{chain} {c+1} N" for c, chain in enumerate(chains)]) + "\n#\n",
     )
     pdb_data.insert(
         2,
@@ -318,8 +319,14 @@ def fix_mmcif(path, chains, sequences, revision_date):
 
         if line.startswith("ATOM") and asym_id_col != auth_id_col:
             split_line = line.split(" ")
-            column_indexes = [count for element, count in zip(split_line, range(len(split_line))) if element]
-            split_line[column_indexes[asym_id_col]] = split_line[column_indexes[auth_id_col]]
+            column_indexes = [
+                count
+                for element, count in zip(split_line, range(len(split_line)))
+                if element
+            ]
+            split_line[column_indexes[asym_id_col]] = split_line[
+                column_indexes[auth_id_col]
+            ]
             pdb_data[i] = " ".join(split_line)
     with open(path, "w") as out:
         out.write("".join(pdb_data))
@@ -331,7 +338,7 @@ def do_align(ref_seq, ref_model, query_seq, query_model, alignment_type="blast")
         aligner = Align.PairwiseAligner()
         aligner.substitution_matrix = Align.substitution_matrices.load("BLOSUM62")
         aligner.open_gap_score = -0.5
-        #aligner.extend_gap_score = -0.5
+        # aligner.extend_gap_score = -0.5
         aln = aligner.align(ref_seq, query_seq)[0]
         try:  # compatibility between versions of Biopython
             alignment.append(aln[0])
@@ -397,7 +404,10 @@ def get_target_data(paths, chains=None, is_fasta=False):
                 get_fastaseq(target_models[0], chain) for chain in target_chains
             ]
             # replicate the same model as many times as there are chains, so that all lists can be zipped later
-            target_models = [pickle.loads(pickle.dumps(target_models[0], -1)) for i in range(len(target_chains))]
+            target_models = [
+                pickle.loads(pickle.dumps(target_models[0], -1))
+                for i in range(len(target_chains))
+            ]
     else:  # fasta file containing one sequence per chain
         target_sequences = [record.seq for record in SeqIO.parse(paths[0], "fasta")]
         target_models = [None for s in target_sequences]
@@ -429,7 +439,9 @@ def get_next_id(path):
     return str(next_cif_id).zfill(4)
 
 
-def superimpose(ref_model, ref_chains, query_models, query_chains, alignment_type="tmalign"):
+def superimpose(
+    ref_model, ref_chains, query_models, query_chains, alignment_type="tmalign"
+):
     backbone_atoms = ["CA", "C", "N", "O"]
     superimposer = Superimposer()
     for i, (ref_chain, query_chain) in enumerate(zip(ref_chains, query_chains)):
@@ -461,15 +473,19 @@ def superimpose(ref_model, ref_chains, query_models, query_chains, alignment_typ
                 ref_ids = [atom.id for atom in ref_aa.get_atoms()]
                 query_ids = [atom.id for atom in query_aa.get_atoms()]
                 ref_atoms += [
-                    atom for atom in ref_aa.get_atoms() if atom.id in backbone_atoms and atom.id in query_ids
+                    atom
+                    for atom in ref_aa.get_atoms()
+                    if atom.id in backbone_atoms and atom.id in query_ids
                 ]
                 query_atoms += [
-                    atom for atom in query_aa.get_atoms() if atom.id in backbone_atoms and atom.id in ref_ids
+                    atom
+                    for atom in query_aa.get_atoms()
+                    if atom.id in backbone_atoms and atom.id in ref_ids
                 ]
             elif query_aa:
                 residues_to_delete.append(query_aa.get_full_id())
-    
-        #for _, _, chain, res in residues_to_delete:
+
+        # for _, _, chain, res in residues_to_delete:
         #    query_model[query_chain].detach_child(res)
 
         # superimpose queries, chain by chain
@@ -544,7 +560,11 @@ def main():
     if args.superimpose:  # modify template
         # superimpose target chains to template, then save those as template mmcif, and realign to itself
         target_model = superimpose(
-            template_model, template_chains, target_models, target_chains, alignment_type=args.align_tool
+            template_model,
+            template_chains,
+            target_models,
+            target_chains,
+            alignment_type=args.align_tool,
         )
         template_model = target_model
         template_sequences = target_sequences
@@ -562,13 +582,20 @@ def main():
     io.save(template_mmcif_path)
 
     fix_mmcif(
-        template_mmcif_path, [ch for ch in template_chains if ch != "-"], template_sequences, args.revision_date
+        template_mmcif_path,
+        [ch for ch in template_chains if ch != "-"],
+        template_sequences,
+        args.revision_date,
     )
-    
+
     pdb_seqres_paths = []
-    for i, (template_chain, template_sequence) in enumerate(zip(template_chains, template_sequences)):
+    for i, (template_chain, template_sequence) in enumerate(
+        zip(template_chains, template_sequences)
+    ):
         msa_chain = target_chains[i]
-        pdb_seqres_path = Path(args.out_dir, "template_data", f"pdb_seqres_{msa_chain}.txt").resolve()
+        pdb_seqres_path = Path(
+            args.out_dir, "template_data", f"pdb_seqres_{msa_chain}.txt"
+        ).resolve()
         pdb_seqres_paths.append(str(pdb_seqres_path))
         write_seqres(
             pdb_seqres_path,
@@ -627,7 +654,9 @@ def main():
             if not fasta_target:
                 remove_extra_chains(this_template_model, [template_chain])
                 remove_extra_chains(this_target_model, [target_chain])
-            print(f"\nAligning target sequence {i+1} (seq: {target_sequence[0:10]}...) to template chain {template_chain} (seq: {template_sequence[0:10]}...)")
+            print(
+                f"\nAligning target sequence {i+1} (seq: {target_sequence[0:10]}...) to template chain {template_chain} (seq: {template_sequence[0:10]}...)"
+            )
             alignment = do_align(
                 template_sequence,
                 this_template_model,
@@ -638,10 +667,9 @@ def main():
             sto_alignment = format_alignment_stockholm(
                 alignment, hit_id=next_id, hit_chain=template_chain
             )
-            
-            
+
             msa_path = f"msas/{msa_chain}"
-            
+
             # write alignment to file
             Path(args.out_dir, msa_path).mkdir(parents=True, exist_ok=True)
             with open(
