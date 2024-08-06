@@ -379,9 +379,9 @@ def do_align(ref_seq, ref_model, query_seq, query_model, alignment_type="blast")
     return alignment
 
 
-def get_target_data(paths, chains=None, is_fasta=False, is_mmcif=False):
+def get_target_data(paths, chains=None, is_fasta=False):
     if not is_fasta:
-        target_models = [load_PDB(target, is_mmcif=is_mmcif) for target in paths]
+        target_models = [load_PDB(target) for target in paths]
         if len(target_models) > 1:
             target_chains = (
                 chains if chains else [c.id for model in target_models for c in model]
@@ -520,13 +520,12 @@ def main():
         else:
             args.align_tool = "tmalign"
 
-    # load target data if needed
-    if args.align or args.superimpose:
-        target_chains, target_sequences, target_models = get_target_data(
-            args.target,
-            chains=args.target_chains,
-            is_fasta=fasta_target,
-        )
+    # load target data
+    target_chains, target_sequences, target_models = get_target_data(
+        args.target,
+        chains=args.target_chains,
+        is_fasta=fasta_target,
+    )
 
     # Handling the template file: convert to a compatible mmCIF file, write sequences to pdb_seqres.txt
     template_model = load_PDB(args.template)
@@ -571,7 +570,7 @@ def main():
     
     pdb_seqres_paths = []
     for i, (template_chain, template_sequence) in enumerate(zip(template_chains, template_sequences)):
-        msa_chain = ascii_upperlower[i]
+        msa_chain = target_chains[i]
         pdb_seqres_path = Path(args.out_dir, "template_data", f"pdb_seqres_{msa_chain}.txt").resolve()
         pdb_seqres_paths.append(str(pdb_seqres_path))
         write_seqres(
