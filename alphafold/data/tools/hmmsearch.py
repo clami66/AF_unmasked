@@ -78,7 +78,7 @@ class Hmmsearch(object):
   def input_format(self) -> str:
     return 'sto'
 
-  def query(self, msa_sto: str, actually_an_a3m: bool = False, chain_id=None) -> str:
+  def query(self, msa: str, actually_an_a3m: bool = False, chain_id=None) -> str:
     """Queries the database using hmmsearch using a given stockholm msa."""
     if not actually_an_a3m:
       hmm = self.hmmbuild_runner.build_profile_from_sto(msa,
