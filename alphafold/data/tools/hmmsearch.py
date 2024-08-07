@@ -80,6 +80,7 @@ class Hmmsearch(object):
 
   def query(self, msa: str, actually_an_a3m: bool = False, chain_id=None) -> str:
     """Queries the database using hmmsearch using a given stockholm msa."""
+    print(actually_an_a3m, chain_id)
     if not actually_an_a3m:
       hmm = self.hmmbuild_runner.build_profile_from_sto(msa,
                                                       model_construction='hand')
