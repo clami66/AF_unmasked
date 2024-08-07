@@ -234,13 +234,13 @@ class DataPipeline:
         msa_output_dir, f'pdb_hits.{self.template_searcher.output_format}')
     if not self.use_precomputed_msas or not os.path.isfile(pdb_hits_out_path):
       if self.template_searcher.input_format == 'sto':
-        pdb_templates_result = self.template_searcher.query(msa_for_templates, actually_an_a3m=self.no_uniref, chain_id)
+        pdb_templates_result = self.template_searcher.query(msa_for_templates, actually_an_a3m=self.no_uniref, chain_id=chain_id)
       elif self.template_searcher.input_format == 'a3m':
         if not self.no_uniref:
           uniref90_msa_as_a3m = parsers.convert_stockholm_to_a3m(msa_for_templates)
-          pdb_templates_result = self.template_searcher.query(uniref90_msa_as_a3m, chain_id)
+          pdb_templates_result = self.template_searcher.query(uniref90_msa_as_a3m, chain_id=chain_id)
         else: # msa is already a a3m
-          pdb_templates_result = self.template_searcher.query(msa_for_templates, chain_id)
+          pdb_templates_result = self.template_searcher.query(msa_for_templates, chain_id=chain_id)
       else:
         raise ValueError('Unrecognized template input format: '
                         f'{self.template_searcher.input_format}')
