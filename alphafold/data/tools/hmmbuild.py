@@ -111,7 +111,7 @@ class Hmmbuild(object):
       if model_construction == 'hand':
         cmd.append(f'--{model_construction}')
       else:
-        cmd.append("--symfrac 0")
+        cmd.extend(["--symfrac", "0"])
       if self.singlemx:
         cmd.append('--singlemx')
       cmd.extend([
