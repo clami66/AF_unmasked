@@ -156,7 +156,7 @@ class DataPipeline:
     self.no_uniref = no_uniref
     self.no_mgnify = no_mgnify
 
-  def process(self, input_fasta_path: str, msa_output_dir: str) -> FeatureDict:
+  def process(self, input_fasta_path: str, msa_output_dir: str, chain_id=None) -> FeatureDict:
     """Runs alignment tools on the input sequence and creates features."""
     with open(input_fasta_path) as f:
       input_fasta_str = f.read()
