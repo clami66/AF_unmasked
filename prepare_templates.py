@@ -328,7 +328,7 @@ def do_align(ref_seq, ref_model, query_seq, query_model, alignment_type="blast")
     if alignment_type == "blast":  # ref and query are sequences rather than structures
         aligner = Align.PairwiseAligner()
         aligner.substitution_matrix = Align.substitution_matrices.load("BLOSUM62")
-        #aligner.open_gap_score = -10
+        aligner.open_gap_score = -1
         #aligner.extend_gap_score = -0.5
         aln = aligner.align(ref_seq, query_seq)[0]
         try:  # compatibility between versions of Biopython
