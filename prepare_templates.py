@@ -217,7 +217,7 @@ def format_alignment_stockholm(alignments, hit_id="", hit_chain=""):
     formatted_alignment += (
         "".join(
             [
-                aa if query_align[i] != "-" else aa.lower()
+                aa if query_align[i] != "-" else ""
                 for i, aa in enumerate(ref_align)
             ]
         )
