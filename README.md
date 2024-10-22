@@ -288,6 +288,6 @@ Whenever predicting homomers (or multimers containing multiple copies of any giv
 
 ## References
 
-If you use AF_unmasked you can cite the preprint [on BioRxiv](https://doi.org/10.1101/2023.09.20.558579)
+If you use AF_unmasked, cite the published article: [DOI: 10.1038/s41467-024-52951-w](https://www.nature.com/articles/s41467-024-52951-w)
 
 As well as the original [AlphaFold](https://doi.org/10.1038/s41586-021-03819-2) and [AlphaFold-Multimer](https://www.biorxiv.org/content/10.1101/2021.10.04.463034v1) papers.
