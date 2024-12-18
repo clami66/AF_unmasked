@@ -260,7 +260,7 @@ CONFIG = ml_collections.ConfigDict({
             'subsample_templates': False,  # We want top templates.
             'masked_msa_replace_fraction': 0.15,
             'max_msa_clusters': 512,
-            'max_templates': 4,
+            'max_templates': 100,
             'num_ensemble': 1,
         },
     },
@@ -403,7 +403,7 @@ CONFIG = ml_collections.ConfigDict({
                         'shared_dropout': True
                     }
                 },
-                'max_templates': 4,
+                'max_templates': 100,
                 'subbatch_size': 128,
                 'use_template_unit_vector': False,
             }
@@ -604,7 +604,7 @@ CONFIG_MULTIMER = ml_collections.ConfigDict({
                     'num_bins': 39
                 },
                 'enabled': True,
-                'max_templates': 4,
+                'max_templates': 100,
                 'num_channels': 64,
                 'subbatch_size': 128,
                 'template_pair_stack': {

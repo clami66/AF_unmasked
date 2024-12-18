@@ -156,10 +156,11 @@ flags.DEFINE_boolean('cross_chain_templates_only', False, 'Whether to include cr
 flags.DEFINE_boolean('separate_homomer_msas', True, 'Whether to force separate processing of homomer MSAs')
 flags.DEFINE_list('models_to_use',None, 'specify which models in model_preset that should be run')
 flags.DEFINE_list('msa_mask', None, 'Ranges of residues where the MSA should be used. MSA columsn for all other residues will be masked out (e.g. "1:100 150:200")')
+flags.DEFINE_float('msa_rand_mask', None, 'Level of MSA randomization (0-1)', lower_bound=0, upper_bound=1)
 
 FLAGS = flags.FLAGS
 
-MAX_TEMPLATE_HITS = 20
+MAX_TEMPLATE_HITS = 1000
 RELAX_MAX_ITERATIONS = 0
 RELAX_ENERGY_TOLERANCE = 2.39
 RELAX_STIFFNESS = 10.0
@@ -220,6 +221,9 @@ def predict_structure(
       mask[start:finish] = 0
     # keep first row in MSA
     feature_dict["msa"][1:, np.where(mask)[0]] = residue_constants.HHBLITS_AA_TO_ID["-"]
+  elif FLAGS.msa_rand_mask:
+    # need a deepcopy of the original features so that they can be reused at every loop
+    original_msa = pickle.loads(pickle.dumps(feature_dict["msa"], -1))
 
   features_output_path = os.path.join(output_dir, 'features.pkl')
   with open(features_output_path, 'wb') as f:
@@ -238,6 +242,20 @@ def predict_structure(
     logging.info('Running model %s on %s', model_name, fasta_name)
     t_0 = time.time()
     model_random_seed = model_index + random_seed * num_models
+    if FLAGS.msa_rand_mask:
+      logging.info('Randomizing MSA with prob: %f', FLAGS.msa_rand_mask)
+      # load original msa, but as a deepcopy instead of by reference
+      feature_dict["msa"] = pickle.loads(pickle.dumps(original_msa, -1))
+      rand_msa_mask = np.random.rand(feature_dict["msa"].shape[1]) < FLAGS.msa_rand_mask
+
+      # make sure that the first row is not masked. Shouldn't be an issue, but just in case
+      feature_dict["msa"][1:, rand_msa_mask] = residue_constants.HHBLITS_AA_TO_ID["X"]
+      # put gap positions back to their original if they have just been masked
+      feature_dict["msa"] = np.where(original_msa == residue_constants.HHBLITS_AA_TO_ID["-"], original_msa, feature_dict["msa"])
+      #feature_dict["msa"][~feature_dict["msa_mask"]] = 0.
+      with open(features_output_path, 'wb') as f:
+        pickle.dump(feature_dict, f, protocol=4)
+
     processed_feature_dict = model_runner.process_features(
         feature_dict, random_seed=model_random_seed)
     timings[f'process_features_{model_name}'] = time.time() - t_0
@@ -266,7 +284,8 @@ def predict_structure(
 
     # Remove jax dependency from results.
     np_prediction_result = _jnp_to_np(dict(prediction_result))
-
+    if FLAGS.msa_rand_mask:
+      np_prediction_result["msa_mask"] = rand_msa_mask
     # Save the model outputs.
     result_output_path = os.path.join(output_dir, f'result_{model_name}.pkl')
     with open(result_output_path, 'wb') as f:
