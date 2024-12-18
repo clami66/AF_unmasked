@@ -584,7 +584,7 @@ def main():
     fix_mmcif(
         template_mmcif_path,
         [ch for ch in template_chains if ch != "-"],
-        template_sequences,
+        [template_sequences[i] for i, ch in enumerate(template_chains) if ch != "-"],
         args.revision_date,
     )
 
