@@ -32,7 +32,7 @@ REQUIRED_FEATURES = frozenset({
     'template_all_atom_mask', 'template_all_atom_positions'
 })
 
-MAX_TEMPLATES = 4
+MAX_TEMPLATES = 1000
 MSA_CROP_SIZE = 2048
 
 
@@ -63,6 +63,8 @@ def pair_and_merge(
   np_chains_list = list(all_chain_features.values())
 
   pair_msa_sequences = not _is_homomer_or_monomer(np_chains_list)
+  num_templates = np_chains_list[0]['template_aatype'].shape[0]
+  max_templates = np.minimum(num_templates, MAX_TEMPLATES)
 
   if pair_msa_sequences:
     np_chains_list = msa_pairing.create_paired_features(
@@ -72,10 +74,10 @@ def pair_and_merge(
       np_chains_list,
       msa_crop_size=MSA_CROP_SIZE,
       pair_msa_sequences=pair_msa_sequences,
-      max_templates=MAX_TEMPLATES)
+      max_templates=max_templates)
   np_example = msa_pairing.merge_chain_features(
       np_chains_list=np_chains_list, pair_msa_sequences=pair_msa_sequences,
-      max_templates=MAX_TEMPLATES,
+      max_templates=max_templates,
       pair_homomers=pair_homomers)
   np_example = process_final(np_example)
   return np_example
