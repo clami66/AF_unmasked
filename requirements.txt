@@ -1,15 +1,17 @@
 absl-py==1.0.0
 biopython==1.79
 chex==0.0.7
-dm-haiku==0.0.9
+dm-haiku==0.0.12
 dm-tree==0.1.6
 docker==5.0.0
 immutabledict==2.0.0
-jax==0.3.25
+jax==0.4.26
 -f https://storage.googleapis.com/jax-releases/jax_cuda_releases.html
-jaxlib==0.3.25+cuda11.cudnn82
+jaxlib==0.4.26+cuda12.cudnn89
+-f https://storage.googleapis.com/jax-releases/jax_cuda_releases.html
 ml-collections==0.1.0
-numpy==1.21.6
+numpy==1.24
 pandas==1.3.4
-scipy==1.7.0
+scipy==1.11
 tensorflow-cpu==2.11.0
+flax==0.8.4
