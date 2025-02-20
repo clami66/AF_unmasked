@@ -1,0 +1,172 @@
+diff --git a/run_alphafold.py b/run_alphafold.py
+index 9792cd5..a2c2e9e 100644
+--- a/run_alphafold.py
++++ b/run_alphafold.py
+@@ -199,6 +199,12 @@ _MAX_TEMPLATE_DATE = flags.DEFINE_string(
+     'templates released after this date will be ignored.',
+ )
+ 
++_CROSS_CHAIN_TEMPLATES = flags.DEFINE_boolean(
++  'cross_chain_templates',
++  False,
++  'Whether to include cross-chain distances in multimer templates',
++)
++
+ # JAX inference performance tuning.
+ _JAX_COMPILATION_CACHE_DIR = flags.DEFINE_string(
+     'jax_compilation_cache_dir',
+@@ -262,6 +268,7 @@ def make_model_config(
+     model_class: type[ModelT] = diffusion_model.Diffuser,
+     flash_attention_implementation: attention.Implementation = 'triton',
+     num_diffusion_samples: int = 5,
++    cross_chain_templates: bool = False,
+ ):
+   """Returns a model config with some defaults overridden."""
+   config = model_class.Config()
+@@ -271,6 +278,10 @@ def make_model_config(
+     )
+   if hasattr(config, 'heads'):
+     config.heads.diffusion.eval.num_samples = num_diffusion_samples
++
++  if hasattr(config, 'evoformer'):
++    config.evoformer.template.cross_chain_templates = cross_chain_templates
++
+   return config
+ 
+ 
+@@ -365,6 +376,7 @@ def predict_structure(
+     fold_input: folding_input.Input,
+     model_runner: ModelRunner,
+     buckets: Sequence[int] | None = None,
++    separate_homomer_templates: bool = False,
+ ) -> Sequence[ResultsForSeed]:
+   """Runs the full inference pipeline to predict structures for each seed."""
+ 
+@@ -372,7 +384,7 @@ def predict_structure(
+   featurisation_start_time = time.time()
+   ccd = chemical_components.cached_ccd(user_ccd=fold_input.user_ccd)
+   featurised_examples = featurisation.featurise_input(
+-      fold_input=fold_input, buckets=buckets, ccd=ccd, verbose=True
++      fold_input=fold_input, buckets=buckets, ccd=ccd, verbose=True, separate_homomer_templates=separate_homomer_templates,
+   )
+   print(
+       f'Featurising data for seeds {fold_input.rng_seeds} took '
+@@ -518,6 +530,7 @@ def process_fold_input(
+     model_runner: ModelRunner | None,
+     output_dir: os.PathLike[str] | str,
+     buckets: Sequence[int] | None = None,
++    separate_homomer_templates: bool = False,
+ ) -> folding_input.Input | Sequence[ResultsForSeed]:
+   """Runs data pipeline and/or inference on a single fold input.
+ 
+@@ -581,6 +594,7 @@ def process_fold_input(
+         fold_input=fold_input,
+         model_runner=model_runner,
+         buckets=buckets,
++        separate_homomer_templates=separate_homomer_templates,
+     )
+     print(
+         f'Writing outputs for {fold_input.name} for seed(s)'
+@@ -706,6 +720,7 @@ def main(_):
+                 attention.Implementation, _FLASH_ATTENTION_IMPLEMENTATION.value
+             ),
+             num_diffusion_samples=_NUM_DIFFUSION_SAMPLES.value,
++            cross_chain_templates=_CROSS_CHAIN_TEMPLATES.value,
+         ),
+         device=devices[0],
+         model_dir=pathlib.Path(MODEL_DIR.value),
+@@ -724,6 +739,7 @@ def main(_):
+         model_runner=model_runner,
+         output_dir=os.path.join(_OUTPUT_DIR.value, fold_input.sanitised_name()),
+         buckets=tuple(int(bucket) for bucket in _BUCKETS.value),
++        separate_homomer_templates=_CROSS_CHAIN_TEMPLATES.value,
+     )
+     num_fold_inputs += 1
+ 
+diff --git a/src/alphafold3/data/featurisation.py b/src/alphafold3/data/featurisation.py
+index 5f6a58c..7a1113c 100644
+--- a/src/alphafold3/data/featurisation.py
++++ b/src/alphafold3/data/featurisation.py
+@@ -41,6 +41,7 @@ def featurise_input(
+     buckets: Sequence[int] | None,
+     max_template_date: datetime.date | None = None,
+     verbose: bool = False,
++    separate_homomer_templates: bool = False,
+ ) -> Sequence[features.BatchDict]:
+   """Featurise the folding input.
+ 
+@@ -78,6 +79,7 @@ def featurise_input(
+         ccd=ccd,
+         random_state=np.random.RandomState(rng_seed),
+         random_seed=rng_seed,
++        separate_homomer_templates=separate_homomer_templates,
+     )
+     if verbose:
+       print(
+diff --git a/src/alphafold3/model/diffusion/model.py b/src/alphafold3/model/diffusion/model.py
+index b6ab149..919713d 100644
+--- a/src/alphafold3/model/diffusion/model.py
++++ b/src/alphafold3/model/diffusion/model.py
+@@ -638,7 +638,12 @@ class Evoformer(hk.Module):
+     asym_id = batch.token_features.asym_id
+     # Construct a mask such that only intra-chain template features are
+     # computed, since all templates are for each chain individually.
+-    multichain_mask = (asym_id[:, None] == asym_id[None, :]).astype(dtype)
++    if self.config.template.cross_chain_templates:
++        logging.info("DISABLING CROSS-CHAIN MASK")
++        multichain_mask = ((asym_id[:, None] == asym_id[None, :]) | (asym_id[:, None] != asym_id[None, :])).astype(dtype)
++    else:
++        logging.info("CROSS-CHAIN MASK ENABLED (DEFAULT)")
++        multichain_mask = (asym_id[:, None] == asym_id[None, :]).astype(dtype)
+ 
+     template_fn = functools.partial(template_module, key=subkey)
+     template_act = template_fn(
+diff --git a/src/alphafold3/model/features.py b/src/alphafold3/model/features.py
+index a7335da..479f2a7 100644
+--- a/src/alphafold3/model/features.py
++++ b/src/alphafold3/model/features.py
+@@ -144,7 +144,6 @@ def _compute_asym_entity_and_sym_id(
+       asym_ids.append(asym_id)
+       entity_ids.append(entity_id)
+       sym_ids.append(sym_id)
+-
+   return Chains(
+       chain_id=np.array(chain_ids),
+       asym_id=np.array(asym_ids),
+@@ -706,6 +705,7 @@ class Templates:
+       fold_input: folding_input.Input,
+       max_templates: int,
+       logging_name: str,
++      separate_homomer_templates: bool = False,
+   ) -> Self:
+     """Compute the template features."""
+ 
+@@ -740,7 +740,7 @@ class Templates:
+           or chain_id not in nonempty_chain_ids
+       )
+ 
+-      if three_letter_sequence in seen_entities:
++      if three_letter_sequence in seen_entities and not separate_homomer_templates:
+         entity_id = seen_entities[three_letter_sequence]
+       else:
+         entity_id = len(seen_entities) + 1
+diff --git a/src/alphafold3/model/pipeline/pipeline.py b/src/alphafold3/model/pipeline/pipeline.py
+index 539968a..d53306c 100644
+--- a/src/alphafold3/model/pipeline/pipeline.py
++++ b/src/alphafold3/model/pipeline/pipeline.py
+@@ -154,6 +154,7 @@ class WholePdbPipeline:
+       random_state: np.random.RandomState,
+       ccd: chemical_components.Ccd,
+       random_seed: int | None = None,
++      separate_homomer_templates: bool = False,
+   ) -> features.BatchDict:
+     """Takes requests from in_queue, adds (key, serialized ex) to out_queue."""
+     if random_seed is None:
+@@ -347,6 +348,7 @@ class WholePdbPipeline:
+         fold_input=fold_input,
+         max_templates=self._config.max_templates,
+         logging_name=logging_name,
++        separate_homomer_templates=separate_homomer_templates,
+     )
+ 
+     ref_max_modified_date = self._config.max_template_date
