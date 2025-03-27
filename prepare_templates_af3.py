@@ -111,6 +111,12 @@ def parse_args():
         nargs="+",
         help="pdb chains for template",
     )
+    parser.add_argument(
+        "--n_seeds",
+        type=int,
+        default=1,
+        help="Number of seeds for AF3 inference step"
+    )
 
     return parser.parse_args()
 
@@ -691,7 +697,7 @@ def main():
                                   }}
         target_sequences_dict.append(chain_dict)
     json_data = {"name": job_name,
-                 "modelSeeds": [1, 2, 3, 4, 5],
+                 "modelSeeds": [n for n in range(args.n_seeds)],
                  "sequences": target_sequences_dict,
                  "dialect": "alphafold3",
                  "version": 2,
