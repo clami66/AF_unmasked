@@ -127,6 +127,11 @@ flags.DEFINE_integer('num_multimer_predictions_per_model', 5, 'How many '
                      'generated per model. E.g. if this is 2 and there are 5 '
                      'models then there will be 10 predictions per input. '
                      'Note: this FLAG only applies if model_preset=multimer')
+flags.DEFINE_integer('num_monomer_predictions_per_model', 1, 'How many '
+                     'predictions (each with a different random seed) will be '
+                     'generated per model. E.g. if this is 2 and there are 5 '
+                     'models then there will be 10 predictions per input. '
+                     'Note: this FLAG only applies if model_preset=monomer[_ptm]')
 flags.DEFINE_integer('nstruct_start', 1, 'model to start with, can be used to parallelize jobs, '
                      'e.g --nstruct 20 --nstruct_start 20 will only make model _20'
                      'e.g --nstruct 21 --nstruct_start 20 will make model _20 and _21 etc.')
@@ -159,6 +164,8 @@ flags.DEFINE_boolean('use_gpu_relax', None, 'Whether to relax on GPU. '
 flags.DEFINE_boolean('dropout', False, 'Turn on drop out during inference to get more diversity')
 flags.DEFINE_boolean('cross_chain_templates', False, 'Whether to include cross-chain distances in multimer templates')
 flags.DEFINE_boolean('cross_chain_templates_only', False, 'Whether to include cross-chain distances in multimer templates')
+flags.DEFINE_boolean('no_feature_pickle', False, 'Do not save feature.pkl in the output folder')
+flags.DEFINE_boolean('reduce_outputs', False, 'Save fewer dictionary elements in results pickles and skips unnecessary files to save disk space')
 flags.DEFINE_boolean('separate_homomer_msas', True, 'Whether to force separate processing of homomer MSAs')
 flags.DEFINE_list('models_to_use',None, 'specify which models in model_preset that should be run')
 flags.DEFINE_list('msa_mask', None, 'Ranges of residues where the MSA should be used. MSA columsn for all other residues will be masked out (e.g. "1:100 150:200")')
@@ -239,9 +246,10 @@ def predict_structure(
     # need a deepcopy of the original features so that they can be reused at every loop
     original_msa = pickle.loads(pickle.dumps(feature_dict["msa"], -1))
 
-  features_output_path = os.path.join(output_dir, 'features.pkl')
-  with open(features_output_path, 'wb') as f:
-    pickle.dump(feature_dict, f, protocol=4)
+  if not FLAGS.no_feature_pickle:
+    features_output_path = os.path.join(output_dir, 'features.pkl')
+    with open(features_output_path, 'wb') as f:
+      pickle.dump(feature_dict, f, protocol=4)
 
   unrelaxed_pdbs = {}
   unrelaxed_proteins = {}
@@ -302,6 +310,11 @@ def predict_structure(
       np_prediction_result["msa_mask"] = rand_msa_mask
     # Save the model outputs.
     result_output_path = os.path.join(output_dir, f'result_{model_name}.pkl')
+    
+    if FLAGS.reduce_outputs:
+      keep = ['predicted_aligned_error', 'plddt', 'ptm', 'iptm', 'ranking_confidence'] # 'distogram'
+      np_prediction_result = {k: v for k, v in np_prediction_result.items() if k in keep}
+
     with open(result_output_path, 'wb') as f:
       pickle.dump(np_prediction_result, f, protocol=4)
 
@@ -399,8 +412,8 @@ def main(argv):
   run_multimer_system = 'multimer' in FLAGS.model_preset
   _check_flag('pdb70_database_path', 'model_preset',
               should_be_set=not run_multimer_system)
-  _check_flag('pdb_seqres_database_path', 'model_preset',
-              should_be_set=run_multimer_system)
+  #_check_flag('pdb_seqres_database_path', 'model_preset',
+  #            should_be_set=run_multimer_system)
   _check_flag('uniprot_database_path', 'model_preset',
               should_be_set=run_multimer_system)
 
@@ -414,62 +427,7 @@ def main(argv):
   if len(fasta_names) != len(set(fasta_names)):
     raise ValueError('All FASTA paths must have a unique basename.')
 
-  if run_multimer_system:
-    template_searcher = hmmsearch.Hmmsearch(
-        binary_path=FLAGS.hmmsearch_binary_path,
-        hmmbuild_binary_path=FLAGS.hmmbuild_binary_path,
-        database_path=FLAGS.pdb_seqres_database_path)
-    template_featurizer = templates.HmmsearchHitFeaturizer(
-        mmcif_dir=FLAGS.template_mmcif_dir,
-        max_template_date=FLAGS.max_template_date,
-        max_hits=MAX_TEMPLATE_HITS,
-        kalign_binary_path=FLAGS.kalign_binary_path,
-        release_dates_path=None,
-        obsolete_pdbs_path=FLAGS.obsolete_pdbs_path)
-  else:
-    template_searcher = hhsearch.HHSearch(
-        binary_path=FLAGS.hhsearch_binary_path,
-        databases=[FLAGS.pdb70_database_path])
-    template_featurizer = templates.HhsearchHitFeaturizer(
-        mmcif_dir=FLAGS.template_mmcif_dir,
-        max_template_date=FLAGS.max_template_date,
-        max_hits=MAX_TEMPLATE_HITS,
-        kalign_binary_path=FLAGS.kalign_binary_path,
-        release_dates_path=None,
-        obsolete_pdbs_path=FLAGS.obsolete_pdbs_path)
-
-  monomer_data_pipeline = pipeline.DataPipeline(
-      jackhmmer_binary_path=FLAGS.jackhmmer_binary_path,
-      hhblits_binary_path=FLAGS.hhblits_binary_path,
-      mmseqs2_binary_path=FLAGS.mmseqs2_binary_path,
-      mmseqs2_uniref_database_path=FLAGS.mmseqs2_uniref_database_path,
-      mmseqs2_env_database_path=FLAGS.mmseqs2_env_database_path,
-      uniref90_database_path=FLAGS.uniref90_database_path,
-      mgnify_database_path=FLAGS.mgnify_database_path,
-      bfd_database_path=FLAGS.bfd_database_path,
-      uniref30_database_path=FLAGS.uniref30_database_path,
-      small_bfd_database_path=FLAGS.small_bfd_database_path,
-      template_searcher=template_searcher,
-      template_featurizer=template_featurizer,
-      use_small_bfd=use_small_bfd,
-      use_precomputed_msas=FLAGS.use_precomputed_msas,
-      mgnify_max_hits=FLAGS.mgnify_max_hits,
-      uniref_max_hits=FLAGS.uniref_max_hits,
-      bfd_max_hits=FLAGS.bfd_max_hits,)
-
-  if run_multimer_system:
-    num_predictions_per_model = FLAGS.num_multimer_predictions_per_model
-    data_pipeline = pipeline_multimer.DataPipeline(
-        monomer_data_pipeline=monomer_data_pipeline,
-        jackhmmer_binary_path=FLAGS.jackhmmer_binary_path,
-        uniprot_database_path=FLAGS.uniprot_database_path,
-        use_mmseqs2_align=(FLAGS.mmseqs2_binary_path is not None),
-        use_precomputed_msas=FLAGS.use_precomputed_msas,
-        max_uniprot_hits=FLAGS.uniprot_max_hits,
-        separate_homomer_msas=FLAGS.separate_homomer_msas)
-  else:
-    num_predictions_per_model = 1
-    data_pipeline = monomer_data_pipeline
+  num_predictions_per_model = FLAGS.num_multimer_predictions_per_model if run_multimer_system else FLAGS.num_monomer_predictions_per_model
 
   model_runners = {}
   model_names = config.MODEL_PRESETS[FLAGS.model_preset]
@@ -520,6 +478,70 @@ def main(argv):
 
   # Predict structure for each of the sequences.
   for i, fasta_path in enumerate(FLAGS.fasta_paths):
+    # We have to move the data pipeline initialization inside this loop
+    # so that we can take advantage of model caching for targets with
+    # personalized templates
+    
+    # search for template data in "FLAGS.output_dir" dir if not set by flags
+    if not FLAGS.pdb_seqres_database_path or not template_mmcif_dir:
+      pdb_seqres_database_path = glob.glob(f"{FLAGS.output_dir}/{fasta_names[i]}/template_data/*.txt")
+      print(pdb_seqres_database_path)
+      template_mmcif_dir = f"{FLAGS.output_dir}/{fasta_names[i]}/template_data/mmcif_files"
+    else:
+      pdb_seqres_database_path = FLAGS.pdb_seqres_database_path
+      template_mmcif_dir = FLAGS.template_mmcif_dir
+
+    if run_multimer_system:
+      template_searcher = hmmsearch.Hmmsearch(
+          binary_path=FLAGS.hmmsearch_binary_path,
+          hmmbuild_binary_path=FLAGS.hmmbuild_binary_path,
+          database_path=pdb_seqres_database_path)
+      template_featurizer = templates.HmmsearchHitFeaturizer(
+          mmcif_dir=template_mmcif_dir,
+          max_template_date=FLAGS.max_template_date,
+          max_hits=MAX_TEMPLATE_HITS,
+          kalign_binary_path=FLAGS.kalign_binary_path,
+          release_dates_path=None,
+          obsolete_pdbs_path=FLAGS.obsolete_pdbs_path)
+    else:
+      template_searcher = hhsearch.HHSearch(
+          binary_path=FLAGS.hhsearch_binary_path,
+          databases=[FLAGS.pdb70_database_path])
+      template_featurizer = templates.HhsearchHitFeaturizer(
+          mmcif_dir=template_mmcif_dir,
+          max_template_date=FLAGS.max_template_date,
+          max_hits=MAX_TEMPLATE_HITS,
+          kalign_binary_path=FLAGS.kalign_binary_path,
+          release_dates_path=None,
+          obsolete_pdbs_path=FLAGS.obsolete_pdbs_path)
+
+    monomer_data_pipeline = pipeline.DataPipeline(
+        jackhmmer_binary_path=FLAGS.jackhmmer_binary_path,
+        hhblits_binary_path=FLAGS.hhblits_binary_path,
+        uniref90_database_path=FLAGS.uniref90_database_path,
+        mgnify_database_path=FLAGS.mgnify_database_path,
+        bfd_database_path=FLAGS.bfd_database_path,
+        uniref30_database_path=FLAGS.uniref30_database_path,
+        small_bfd_database_path=FLAGS.small_bfd_database_path,
+        template_searcher=template_searcher,
+        template_featurizer=template_featurizer,
+        use_small_bfd=use_small_bfd,
+        use_precomputed_msas=FLAGS.use_precomputed_msas,
+        mgnify_max_hits=FLAGS.mgnify_max_hits,
+        uniref_max_hits=FLAGS.uniref_max_hits,
+        bfd_max_hits=FLAGS.bfd_max_hits)
+
+    if run_multimer_system:
+      data_pipeline = pipeline_multimer.DataPipeline(
+          monomer_data_pipeline=monomer_data_pipeline,
+          jackhmmer_binary_path=FLAGS.jackhmmer_binary_path,
+          uniprot_database_path=FLAGS.uniprot_database_path,
+          use_precomputed_msas=FLAGS.use_precomputed_msas,
+          max_uniprot_hits=FLAGS.uniprot_max_hits,
+          separate_homomer_msas=FLAGS.separate_homomer_msas)
+    else:
+      data_pipeline = monomer_data_pipeline
+
     fasta_name = fasta_names[i]
     predict_structure(
         fasta_path=fasta_path,
@@ -541,7 +563,6 @@ if __name__ == '__main__':
       'data_dir',
       'uniref90_database_path',
       'mgnify_database_path',
-      'template_mmcif_dir',
       'max_template_date',
       'obsolete_pdbs_path',
       'use_gpu_relax',
