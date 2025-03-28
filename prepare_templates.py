@@ -103,6 +103,11 @@ def parse_args():
         nargs="+",
         help="pdb chains for template",
     )
+    parser.add_argument(
+        "--no_msa",
+        action="store_true",
+        help="Do not generate MSA when running AlphaFold",
+    )
 
     return parser.parse_args()
 
@@ -627,6 +632,8 @@ def main():
         args.align
     ):  # only if an alignment tool is selected, otherwise leave it to AlphaFold's template search
 
+        seq_to_chain = {}
+        unique_seqs = set()
         assert len(target_chains) == len(
             template_chains
         ), f"The number of chains to align from target ({target_chains}) doesn't match the number of chains in the template ({template_chains}). Make sure that the files contain the same number of chains or select the chains that should be paired with --target_chains, --template_chains"
@@ -649,6 +656,7 @@ def main():
             )
         ):
             msa_chain = ascii_upperlower[i]
+            msa_path = f"msas/{msa_chain}"
             this_template_model = pickle.loads(pickle.dumps(template_model, -1))
             this_target_model = pickle.loads(pickle.dumps(target_model, -1))
             if not fasta_target:
@@ -669,7 +677,9 @@ def main():
                     alignment, hit_id=next_id, hit_chain=template_chain
                 )
 
-                msa_path = f"msas/{msa_chain}"
+                if target_sequence not in unique_seqs:
+                    unique_seqs.add(target_sequence)
+                    seq_to_chain[target_sequence] = msa_chain
 
                 # write alignment to file
                 Path(args.out_dir, msa_path).mkdir(parents=True, exist_ok=True)
@@ -679,6 +689,14 @@ def main():
                 ) as pdb_hits:
                     for line in sto_alignment:
                         pdb_hits.write(line)
+
+                if seq_to_chain[target_sequence] != target_chain: # this is not the first chain with this given sequence
+                    os.symlink(f"{os.path.abspath(args.out_dir)}/msas/{seq_to_chain[target_sequence]}/mmseqs_hits.a3m",
+                               f"{os.path.abspath(args.out_dir)}/msas/{msa_chain}/mmseqs_hits.a3m")
+                elif args.no_msa: # writes out a single sequence as MSA
+                    with open(f"{os.path.abspath(args.out_dir)}/msas/{msa_chain}/mmseqs_hits.a3m", "w") as a3m:
+                        a3m.write(f"> chain_{msa_chain}\n")
+                        a3m.write(f"{target_sequence}\n")
 
     if not fasta_target:
         print(
