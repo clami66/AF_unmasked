@@ -45,13 +45,32 @@ _UNIPROT_PATTERN = re.compile(
     """,
     re.VERBOSE)
 
+_MMSEQS_PATTERN = re.compile(
+    r"""
+    ^
+    # >UniRef100_A0A6A4XD59 2',3'-cyclic-nucleotide 3'-phosphodiesterase n=1 Tax=Amphibalanus amphitrite TaxID=1232801 RepID=A0A6A4XD59_AMPAM
+    (?:UniRef100_)
+    # A primary accession number of the UniProtKB entry.
+    (?P<AccessionIdentifier>[A-Za-z0-9]{6,13})
+    # Occasionally there is a _0 or _1 isoform suffix, which we ignore.
+    (?:_\d)?
+    .*
+    (?:TaxID=)
+    (?P<TaxID>[0-9]+)[ ]
+    (?:RepID=[A-Za-z0-9]+)
+    _
+    (?P<SpeciesIdentifier>([A-Za-z0-9]){1,5})
+    $
+    """,
+    re.VERBOSE)
+
 
 @dataclasses.dataclass(frozen=True)
 class Identifiers:
   species_id: str = ''
 
 
-def _parse_sequence_identifier(msa_sequence_identifier: str) -> Identifiers:
+def _parse_sequence_identifier(msa_sequence_identifier: str, is_mmseqs: bool = False) -> Identifiers:
   """Gets species from an msa sequence identifier.
 
   The sequence identifier has the format specified by
@@ -65,26 +84,31 @@ def _parse_sequence_identifier(msa_sequence_identifier: str) -> Identifiers:
     An `Identifiers` instance with species_id. These
     can be empty in the case where no identifier was found.
   """
-  matches = re.search(_UNIPROT_PATTERN, msa_sequence_identifier.strip())
+  PATTERN = _UNIPROT_PATTERN if not is_mmseqs else _MMSEQS_PATTERN
+  matches = re.search(PATTERN, msa_sequence_identifier.strip())
   if matches:
     return Identifiers(
         species_id=matches.group('SpeciesIdentifier'))
+#        species_id=matches.group('TaxID'))
   return Identifiers()
 
 
-def _extract_sequence_identifier(description: str) -> Optional[str]:
-  """Extracts sequence identifier from description. Returns None if no match."""
-  split_description = description.split()
-  if split_description:
-    return split_description[0].partition('/')[0]
+def _extract_sequence_identifier(description: str, is_mmseqs: bool = False) -> Optional[str]:
+  if not is_mmseqs:
+    """Extracts sequence identifier from description. Returns None if no match."""
+    split_description = description.split()
+    if split_description:
+      return split_description[0].partition('/')[0]
+    else:
+      return None
   else:
-    return None
+    return description
 
 
-def get_identifiers(description: str) -> Identifiers:
+def get_identifiers(description: str, is_mmseqs: bool = False) -> Identifiers:
   """Computes extra MSA features from the description."""
-  sequence_identifier = _extract_sequence_identifier(description)
+  sequence_identifier = _extract_sequence_identifier(description, is_mmseqs)
   if sequence_identifier is None:
     return Identifiers()
   else:
-    return _parse_sequence_identifier(sequence_identifier)
+    return _parse_sequence_identifier(sequence_identifier, is_mmseqs)
