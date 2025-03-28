@@ -14,6 +14,7 @@
 
 """Full AlphaFold protein structure prediction script."""
 import enum
+import glob
 import json
 import os
 import pathlib
