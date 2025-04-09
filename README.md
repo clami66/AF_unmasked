@@ -10,7 +10,9 @@ A simplified version of AF_unmasked is available to run as notebook on Google Co
 
 ## Installing AF_unmasked
 
-The installation and setup procedure is the same as for the regular version of AlphaFold (non-docker version). We recommend Anaconda and mamba along with pip3 to manage the necessary software packages:
+### Stand-alone installation
+
+If you don't wish to use a Docker image, the installation and setup procedure is as follows:
 
 1. [Install Anaconda/Miniconda](https://conda.io/projects/conda/en/latest/user-guide/install/index.html)
 
@@ -33,7 +35,24 @@ conda activate AF_unmasked
 python -m pip install -r requirements.txt
 ```
 
-3. [optional] Download and set up the AF parameters and sequence databases. We recommend downloading the reduced set of databases since evolutionary inputs are not as important when a good template is provided. If the full databases are needed, run the following by omitting `reduced_dbs`:
+### With Docker
+
+1. Pull the image from Docker Hub. 
+```
+docker image pull clami66/af_unmasked
+```
+
+Alternatively, use the provided Dockerfile to build the image from scratch.
+
+2. Run the necessary scripts from the docker image while mapping the necessary directories with `-v` and the GPU devices with `--gpus`, e.g.:
+```
+docker run -v /home:/home --gpus device=0  af_unmasked prepare_templates.py ...
+docker run -v /home:/home --gpus device=0  af_unmasked run_alphafold.py ...
+```
+
+### Setting up the databases
+
+[optional] Download and set up the AF parameters and sequence databases. Reduced databases (`reduced_dbs` option) should suffice as evolutionary inputs are not as important when a good template is provided. If the full databases are needed, run the following by omitting `reduced_dbs`:
 
 ```bash
 cd scripts
