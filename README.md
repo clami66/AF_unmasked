@@ -12,7 +12,7 @@ A simplified version of AF_unmasked is available to run as notebook on Google Co
 
 ### Stand-alone installation
 
-As an alternative to using Docker, the installation and setup procedure is as follows:
+If you don't wish to use a Docker image, the installation and setup procedure is as follows:
 
 1. [Install Anaconda/Miniconda](https://conda.io/projects/conda/en/latest/user-guide/install/index.html)
 
