@@ -415,7 +415,7 @@ CONFIG = ml_collections.ConfigDict({
             'use_remat': False,
             'zero_init': True,
             'eval_dropout': False,
-            'use_flash_attention': True,
+            'use_flash_attention': False,
             'flash': {
               'num_warps': 2,
               'block_q': 64,
@@ -657,7 +657,7 @@ CONFIG_MULTIMER = ml_collections.ConfigDict({
             'use_remat': False,
             'zero_init': True,
             'eval_dropout': False,
-            'use_flash_attention': True,
+            'use_flash_attention': False,
             'flash': {
               'num_warps': 2,
               'block_q': 64,
