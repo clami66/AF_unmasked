@@ -248,7 +248,7 @@ class DataPipeline:
       if self.template_searcher.input_format == 'sto':
         pdb_templates_result = self.template_searcher.query(msa_for_templates, chain_id, actually_an_a3m=(self.mmseqs2_runner is not None))
       elif self.template_searcher.input_format == 'a3m':
-        uniref90_msa_as_a3m = parsers.convert_stockholm_to_a3m(msa_for_templates)
+        uniref90_msa_as_a3m = parsers.convert_stockholm_to_a3m(msa_for_templates) if not self.mmseqs2_runner else msa_for_templates
         pdb_templates_result = self.template_searcher.query(uniref90_msa_as_a3m, chain_id)
       else:
         raise ValueError('Unrecognized template input format: '
