@@ -484,14 +484,14 @@ def main(argv):
     # personalized templates
     
     # search for template data in "FLAGS.output_dir" dir if not set by flags
-    if not FLAGS.pdb_seqres_database_path or not template_mmcif_dir:
-      pdb_seqres_database_path = glob.glob(f"{FLAGS.output_dir}/{fasta_names[i]}/template_data/*.txt")
-      print(pdb_seqres_database_path)
+    if not FLAGS.pdb_seqres_database_path or not FLAGS.template_mmcif_dir:
+      pdb_seqres_database_path = sorted(glob.glob(f"{FLAGS.output_dir}/{fasta_names[i]}/template_data/*.txt"))
       template_mmcif_dir = f"{FLAGS.output_dir}/{fasta_names[i]}/template_data/mmcif_files"
     else:
       pdb_seqres_database_path = FLAGS.pdb_seqres_database_path
       template_mmcif_dir = FLAGS.template_mmcif_dir
-
+    logging.info(f"PDB SEQRES: {pdb_seqres_database_path}")
+    logging.info(f"PDB MMCIF: {template_mmcif_dir}")
     if run_multimer_system:
       template_searcher = hmmsearch.Hmmsearch(
           binary_path=FLAGS.hmmsearch_binary_path,
@@ -519,11 +519,14 @@ def main(argv):
     monomer_data_pipeline = pipeline.DataPipeline(
         jackhmmer_binary_path=FLAGS.jackhmmer_binary_path,
         hhblits_binary_path=FLAGS.hhblits_binary_path,
+        mmseqs2_binary_path=FLAGS.mmseqs2_binary_path,
         uniref90_database_path=FLAGS.uniref90_database_path,
         mgnify_database_path=FLAGS.mgnify_database_path,
         bfd_database_path=FLAGS.bfd_database_path,
         uniref30_database_path=FLAGS.uniref30_database_path,
         small_bfd_database_path=FLAGS.small_bfd_database_path,
+        mmseqs2_uniref_database_path=FLAGS.mmseqs2_uniref_database_path,
+        mmseqs2_env_database_path=FLAGS.mmseqs2_env_database_path,
         template_searcher=template_searcher,
         template_featurizer=template_featurizer,
         use_small_bfd=use_small_bfd,
@@ -539,7 +542,8 @@ def main(argv):
           uniprot_database_path=FLAGS.uniprot_database_path,
           use_precomputed_msas=FLAGS.use_precomputed_msas,
           max_uniprot_hits=FLAGS.uniprot_max_hits,
-          separate_homomer_msas=FLAGS.separate_homomer_msas)
+          separate_homomer_msas=FLAGS.separate_homomer_msas,
+          use_mmseqs2_align=(FLAGS.mmseqs2_binary_path is not None))
     else:
       data_pipeline = monomer_data_pipeline
 

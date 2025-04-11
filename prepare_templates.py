@@ -691,10 +691,10 @@ def main():
                         pdb_hits.write(line)
 
                 if seq_to_chain[target_sequence] != target_chain: # this is not the first chain with this given sequence
-                    os.symlink(f"{os.path.abspath(args.out_dir)}/msas/{seq_to_chain[target_sequence]}/mmseqs_hits.a3m",
-                               f"{os.path.abspath(args.out_dir)}/msas/{msa_chain}/mmseqs_hits.a3m")
+                    os.symlink(f"{os.path.abspath(args.out_dir)}/msas/{seq_to_chain[target_sequence]}/mmseqs2_hits.a3m",
+                               f"{os.path.abspath(args.out_dir)}/msas/{msa_chain}/mmseqs2_hits.a3m")
                 elif args.no_msa: # writes out a single sequence as MSA
-                    with open(f"{os.path.abspath(args.out_dir)}/msas/{msa_chain}/mmseqs_hits.a3m", "w") as a3m:
+                    with open(f"{os.path.abspath(args.out_dir)}/msas/{msa_chain}/mmseqs2_hits.a3m", "w") as a3m:
                         a3m.write(f"> chain_{msa_chain}\n")
                         a3m.write(f"{target_sequence}\n")
 
