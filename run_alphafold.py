@@ -286,7 +286,8 @@ def predict_structure(
         profile = np.array([profile_dict[n] if n in profile_dict else 0.0 for n in range(feature_dict["msa"].shape[1])])
       # load original msa, but as a deepcopy instead of by reference
       rand_msa_mask = np.random.rand(feature_dict["msa"].shape[1]) < profile
-
+      logging.info(profile)
+      logging.info(rand_msa_mask)
       # make sure that the first row is not masked. Shouldn't be an issue, but just in case
       feature_dict["msa"][1:, rand_msa_mask] = residue_constants.HHBLITS_AA_TO_ID["X"]
       # put gap positions back to their original if they have just been masked
