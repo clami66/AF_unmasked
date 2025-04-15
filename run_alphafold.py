@@ -549,7 +549,7 @@ def main(argv):
         use_precomputed_msas=FLAGS.use_precomputed_msas,
         mgnify_max_hits=FLAGS.mgnify_max_hits,
         uniref_max_hits=FLAGS.uniref_max_hits,
-        bfd_max_hits=FLAGS.bfd_max_hit,
+        bfd_max_hits=FLAGS.bfd_max_hits,
         mmseqs2_max_hits=FLAGS.mmseqs2_max_hits)
 
     if run_multimer_system:
