@@ -149,7 +149,7 @@ class MMseqs2:
             shutil.rmtree(base.joinpath("tmp_env"))
 
     def query(
-        self, fasta_path: str,
+        self, fasta_path: str, max_sequences:int = None
     ):
 
         delete = False if self.base is not None else True
@@ -295,6 +295,9 @@ class MMseqs2:
             with open(base.joinpath("0.a3m")) as f:
                 a3m = f.readlines()
             a3m = "".join([line for line in a3m if line and not line.startswith("#")])
+            
+            #if max_sequences is not None:
+            #    a3m = "\n".join(a3m.split("\n")[:max_sequences*2])
         raw_output = dict(
             a3m=a3m,
             output=None,

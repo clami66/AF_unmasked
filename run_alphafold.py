@@ -148,6 +148,7 @@ flags.DEFINE_integer('uniprot_max_hits', 50000, 'Max hits in uniprot MSA')
 flags.DEFINE_integer('mgnify_max_hits', 500, 'Max hits in uniprot MSA')
 flags.DEFINE_integer('uniref_max_hits', 10000, 'Max hits in uniprot MSA')
 flags.DEFINE_integer('bfd_max_hits', 10000, 'Max hits in uniprot MSA')
+flags.DEFINE_integer('mmseqs2_max_hits', 10000, 'Max hits in uniprot MSA')
 flags.DEFINE_float('early_stop_tolerance', 0.5,'early stopping threshold')
 flags.DEFINE_enum_class('models_to_relax', ModelsToRelax.BEST, ModelsToRelax,
                         'The models to run the final relaxation step on. '
@@ -286,8 +287,6 @@ def predict_structure(
         profile = np.array([profile_dict[n] if n in profile_dict else 0.0 for n in range(feature_dict["msa"].shape[1])])
       # load original msa, but as a deepcopy instead of by reference
       rand_msa_mask = np.random.rand(feature_dict["msa"].shape[1]) < profile
-      logging.info(profile)
-      logging.info(rand_msa_mask)
       # make sure that the first row is not masked. Shouldn't be an issue, but just in case
       feature_dict["msa"][1:, rand_msa_mask] = residue_constants.HHBLITS_AA_TO_ID["X"]
       # put gap positions back to their original if they have just been masked
@@ -550,7 +549,8 @@ def main(argv):
         use_precomputed_msas=FLAGS.use_precomputed_msas,
         mgnify_max_hits=FLAGS.mgnify_max_hits,
         uniref_max_hits=FLAGS.uniref_max_hits,
-        bfd_max_hits=FLAGS.bfd_max_hits)
+        bfd_max_hits=FLAGS.bfd_max_hit,
+        mmseqs2_max_hits=FLAGS.mmseqs2_max_hits)
 
     if run_multimer_system:
       data_pipeline = pipeline_multimer.DataPipeline(

@@ -131,6 +131,7 @@ class DataPipeline:
                mgnify_max_hits: int = 501,
                uniref_max_hits: int = 10000,
                bfd_max_hits: int = 10000,
+               mmseqs2_max_hits: int = 10000,
                use_precomputed_msas: bool = False,):
     """Initializes the data pipeline."""
     self._use_small_bfd = use_small_bfd
@@ -162,6 +163,7 @@ class DataPipeline:
     self.mgnify_max_hits = mgnify_max_hits
     self.uniref_max_hits = uniref_max_hits
     self.bfd_max_hits = bfd_max_hits
+    self.mmseqs2_max_hits = mmseqs2_max_hits
     self.use_precomputed_msas = use_precomputed_msas
 
   def process(self, input_fasta_path: str, msa_output_dir: str, chain_id=None) -> FeatureDict:
@@ -187,7 +189,8 @@ class DataPipeline:
         input_fasta_path=input_fasta_path,
         msa_out_path=mmseqs2_out_path,
         msa_format='a3m',
-        use_precomputed_msas=self.use_precomputed_msas,)
+        use_precomputed_msas=self.use_precomputed_msas,
+        max_sto_sequences=self.mmseqs2_max_hits)
       mmseqs2_msa = parsers.parse_a3m(mmseqs2_result['a3m'])
     else:
       uniref90_out_path = os.path.join(msa_output_dir, 'uniref90_hits.sto')
