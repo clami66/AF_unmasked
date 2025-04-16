@@ -294,7 +294,7 @@ class MMseqs2:
 
             with open(base.joinpath("0.a3m")) as f:
                 a3m = f.readlines()
-            a3m = "".join([line for line in a3m if line and not line.startswith("#")])
+            a3m = "".join([line for line in a3m if line.strip() and not line.startswith("#")])
             
             #if max_sequences is not None:
             #    a3m = "\n".join(a3m.split("\n")[:max_sequences*2])
