@@ -247,22 +247,6 @@ def predict_structure(
     logging.info("Finished running alignments, exiting now")
     return
 
-  if "msa" in feature_dict and FLAGS.msa_mask:
-    mask = np.ones_like(feature_dict["msa"][0])
-    for aa_range in FLAGS.msa_mask:
-      start, finish = (int(n) - 1 for n in aa_range.split(":"))
-      mask[start:finish] = 0
-    # keep first row in MSA
-    feature_dict["msa"][1:, np.where(mask)[0]] = residue_constants.HHBLITS_AA_TO_ID["-"]
-  elif FLAGS.msa_rand_mask or FLAGS.msa_rand_profile:
-    # need a deepcopy of the original features so that they can be reused at every loop
-    original_msa = pickle.loads(pickle.dumps(feature_dict["msa"], -1))
-
-  if not FLAGS.no_feature_pickle:
-    features_output_path = os.path.join(output_dir, 'features.pkl')
-    with open(features_output_path, 'wb') as f:
-      pickle.dump(feature_dict, f, protocol=4)
-
   unrelaxed_pdbs = {}
   unrelaxed_proteins = {}
   relaxed_pdbs = {}
@@ -276,24 +260,6 @@ def predict_structure(
     logging.info('Running model %s on %s', model_name, fasta_name)
     t_0 = time.time()
     model_random_seed = model_index + random_seed * num_models
-    if FLAGS.msa_rand_mask or FLAGS.msa_rand_profile:
-      feature_dict["msa"] = pickle.loads(pickle.dumps(original_msa, -1))
-      if FLAGS.msa_rand_mask:
-        logging.info('Randomizing MSA with prob: %f', FLAGS.msa_rand_mask)
-        profile = FLAGS.msa_rand_mask
-      else:
-        logging.info('Randomizing MSA with prob profile: %s', FLAGS.msa_rand_profile)
-        profile_dict = parse_profile(FLAGS.msa_rand_profile)
-        profile = np.array([profile_dict[n] if n in profile_dict else 0.0 for n in range(feature_dict["msa"].shape[1])])
-      # load original msa, but as a deepcopy instead of by reference
-      rand_msa_mask = np.random.rand(feature_dict["msa"].shape[1]) < profile
-      # make sure that the first row is not masked. Shouldn't be an issue, but just in case
-      feature_dict["msa"][1:, rand_msa_mask] = residue_constants.HHBLITS_AA_TO_ID["X"]
-      # put gap positions back to their original if they have just been masked
-      feature_dict["msa"] = np.where(original_msa == residue_constants.HHBLITS_AA_TO_ID["-"], original_msa, feature_dict["msa"])
-      #feature_dict["msa"][~feature_dict["msa_mask"]] = 0.
-      with open(features_output_path, 'wb') as f:
-        pickle.dump(feature_dict, f, protocol=4)
 
     processed_feature_dict = model_runner.process_features(
         feature_dict, random_seed=model_random_seed)
@@ -323,15 +289,7 @@ def predict_structure(
 
     # Remove jax dependency from results.
     np_prediction_result = _jnp_to_np(dict(prediction_result))
-    if FLAGS.msa_rand_mask:
-      np_prediction_result["msa_mask"] = rand_msa_mask
-    # Save the model outputs.
     result_output_path = os.path.join(output_dir, f'result_{model_name}.pkl')
-    
-    if FLAGS.reduce_outputs:
-      keep = ['predicted_aligned_error', 'plddt', 'ptm', 'iptm', 'ranking_confidence'] # 'distogram'
-      np_prediction_result = {k: v for k, v in np_prediction_result.items() if k in keep}
-
     with open(result_output_path, 'wb') as f:
       pickle.dump(np_prediction_result, f, protocol=4)
 
@@ -357,11 +315,11 @@ def predict_structure(
       sorted(ranking_confidences.items(), key=lambda x: x[1], reverse=True)]
 
   # Relax predictions.
-  if models_to_relax == ModelsToRelax.BEST:
+  if models_to_relax == "best":
     to_relax = [ranked_order[0]]
-  elif models_to_relax == ModelsToRelax.ALL:
+  elif models_to_relax == "all":
     to_relax = ranked_order
-  elif models_to_relax == ModelsToRelax.NONE:
+  elif models_to_relax is None:
     to_relax = []
 
   for model_name in to_relax:
