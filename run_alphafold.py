@@ -364,7 +364,9 @@ def predict_structure(
     relax_metrics_path = os.path.join(output_dir, 'relax_metrics.json')
     with open(relax_metrics_path, 'w') as f:
       f.write(json.dumps(relax_metrics, indent=4))
-
+  feat_output_path = os.path.join(output_dir, 'features.pkl')
+  with open(feat_output_path, 'wb') as f:
+    pickle.dump(processed_feature_dict, f, protocol=4)
 
 def main(argv):
   if len(argv) > 1:
