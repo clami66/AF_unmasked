@@ -120,6 +120,7 @@ def sharded_apply(
   if shard_size is None:
     return fun
 
+  @_set_docstring(docstr)
   @functools.wraps(fun)
   def mapped_fn(*args):
     # Expand in axes and Determine Loop range
